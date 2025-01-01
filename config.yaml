@@ -1,0 +1,8 @@
+repo: "your-user/your-repo"
+asset_suffix: ".tar.gz"
+check_interval_seconds: 300
+install_dir: "/opt/myapp/deployments"
+current_symlink: "/opt/myapp/current"
+run_command: "poetry run python main.py"
+post_deploy_script: "deploy.sh"
+state_file: "/opt/myapp/gh-deployer/state.yaml"
