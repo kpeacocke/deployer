@@ -13,11 +13,11 @@ func TestGitHubClient_GetLatestRelease(t *testing.T) {
 		if r.URL.Path != "/repos/test/repo/releases/latest" {
 			t.Errorf("Expected path '/repos/test/repo/releases/latest', got '%s'", r.URL.Path)
 		}
-		
+
 		if r.Header.Get("Accept") != "application/vnd.github.v3+json" {
 			t.Errorf("Expected Accept header 'application/vnd.github.v3+json', got '%s'", r.Header.Get("Accept"))
 		}
-		
+
 		response := `{
 			"tag_name": "v1.2.3",
 			"assets": [
@@ -31,7 +31,7 @@ func TestGitHubClient_GetLatestRelease(t *testing.T) {
 				}
 			]
 		}`
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		_, _ = w.Write([]byte(response))
@@ -63,7 +63,7 @@ func TestGitHubClient_GetLatestRelease_WithAuth(t *testing.T) {
 		if auth != "token test-token" {
 			t.Errorf("Expected Authorization header 'token test-token', got '%s'", auth)
 		}
-		
+
 		response := `{"tag_name": "v1.0.0", "assets": []}`
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
@@ -95,7 +95,7 @@ func TestRelease_FindAssetWithSuffix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to find asset: %v", err)
 	}
-	
+
 	if asset.Name != "app.tar.gz" {
 		t.Errorf("Expected asset name 'app.tar.gz', got '%s'", asset.Name)
 	}

@@ -25,7 +25,7 @@ logging:
   file: "/tmp/test.log"
 `
 
-	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 		t.Fatalf("Failed to write test config: %v", err)
 	}
 
@@ -57,7 +57,7 @@ func TestLoadConfigWithDefaults(t *testing.T) {
 asset_suffix: ".tar.gz"
 `
 
-	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 		t.Fatalf("Failed to write test config: %v", err)
 	}
 
@@ -93,7 +93,7 @@ func TestLoadConfigEnvironmentOverride(t *testing.T) {
 asset_suffix: ".tar.gz"
 `
 
-	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 		t.Fatalf("Failed to write test config: %v", err)
 	}
 
