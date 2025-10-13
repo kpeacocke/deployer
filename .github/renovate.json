@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    "schedule:weekends",
+    "group:monorepo"
+  ],
+  "timezone": "America/New_York",
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+  "assignAutomerge": true,
+  "packageRules": [
+    {
+      "matchDatasources": ["go"],
+      "rangeStrategy": "bump",
+      "commitMessagePrefix": "build(deps): "
+    },
+    {
+      "matchManagers": ["gomod"],
+      "groupName": "Go dependencies"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "commitMessagePrefix": "ci: "
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "osvVulnerabilityAlerts": true,
+  "labels": ["dependencies"],
+  "reviewers": ["kpeacocke"],
+  "assignees": ["kpeacocke"]
+}
