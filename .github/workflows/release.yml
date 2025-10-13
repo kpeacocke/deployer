@@ -11,10 +11,41 @@ permissions:
   contents: write
 
 jobs:
+  check-ci-success:
+    name: Check CI Success
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.check.outputs.should-release }}
+    steps:
+    - name: Check if all CI jobs succeeded
+      id: check
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const runId = context.payload.workflow_run.id;
+          const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id: runId,
+          });
+          
+          const allSuccess = jobs.jobs.every(job => job.conclusion === 'success');
+          console.log('All CI jobs successful:', allSuccess);
+          console.log('Jobs:', jobs.jobs.map(j => ({ name: j.name, conclusion: j.conclusion })));
+          
+          core.setOutput('should-release', allSuccess.toString());
+          
+          if (!allSuccess) {
+            console.log('❌ Not all CI jobs passed - skipping release');
+          } else {
+            console.log('✅ All CI jobs passed - proceeding with release');
+          }
+
   semantic-release:
     name: Semantic Release
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    needs: check-ci-success
+    if: needs.check-ci-success.outputs.should-release == 'true'
     outputs:
       new_release_published: ${{ steps.semantic.outputs.new_release_published }}
       new_release_version: ${{ steps.semantic.outputs.new_release_version }}

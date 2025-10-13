@@ -56,7 +56,13 @@ func (c *GitHubClient) GetLatestRelease(ctx context.Context, repo string) (*Rele
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// Log the error but don't return it as we're in a defer
+			// In production, you might want to use a proper logger
+			fmt.Printf("Warning: failed to close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode == 403 {
 		return nil, fmt.Errorf("rate limited by GitHub API")
@@ -100,7 +106,13 @@ func (c *GitHubClient) DownloadAsset(ctx context.Context, asset *Asset, destPath
 	if err != nil {
 		return fmt.Errorf("failed to download asset: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// Log the error but don't return it as we're in a defer
+			// In production, you might want to use a proper logger
+			fmt.Printf("Warning: failed to close response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("download failed with status %d", resp.StatusCode)

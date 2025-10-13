@@ -82,8 +82,14 @@ asset_suffix: ".tar.gz"
 
 func TestLoadConfigEnvironmentOverride(t *testing.T) {
 	// Set environment variable
-	os.Setenv("GITHUB_TOKEN", "test-token-123")
-	defer os.Unsetenv("GITHUB_TOKEN")
+	if err := os.Setenv("GITHUB_TOKEN", "test-token-123"); err != nil {
+		t.Fatalf("Failed to set environment variable: %v", err)
+	}
+	defer func() {
+		if err := os.Unsetenv("GITHUB_TOKEN"); err != nil {
+			t.Logf("Failed to unset environment variable: %v", err)
+		}
+	}()
 
 	// Create config file without token
 	tempDir := t.TempDir()

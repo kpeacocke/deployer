@@ -1,12 +1,7 @@
+version: "2"
+
 run:
   timeout: 5m
 
-linters:
-  enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - typecheck
-    - unused
+# Use default linters (errcheck, govet, ineffassign, staticcheck, unused)
+# which are enabled by default
