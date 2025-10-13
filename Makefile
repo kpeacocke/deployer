@@ -77,6 +77,6 @@ build-all:
 test-version: build
 	./$(BINARY_NAME) --version
 
-# Test help output  
+# Test help output
 test-help: build
 	./$(BINARY_NAME) --help

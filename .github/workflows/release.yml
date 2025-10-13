@@ -58,22 +58,22 @@ jobs:
         VERSION="${{ steps.tag_info.outputs.version }}"
         BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
         LDFLAGS="-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
-        
+
         # Linux AMD64
         GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o gh-deployer-linux-amd64 .
-        
+
         # Linux ARM64
         GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o gh-deployer-linux-arm64 .
-        
+
         # Linux ARM (Raspberry Pi)
         GOOS=linux GOARCH=arm GOARM=7 go build -ldflags "${LDFLAGS}" -o gh-deployer-linux-armv7 .
-        
+
         # macOS AMD64 (Intel)
         GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o gh-deployer-darwin-amd64 .
-        
+
         # macOS ARM64 (Apple Silicon)
         GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o gh-deployer-darwin-arm64 .
-        
+
         # Windows AMD64
         GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o gh-deployer-windows-amd64.exe .
 

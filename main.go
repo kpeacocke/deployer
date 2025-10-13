@@ -78,7 +78,7 @@ func main() {
 func setupLogging(config *Config) *log.Logger {
 	// Set log output
 	if config.Logging.File != "" {
-		file, err := os.OpenFile(config.Logging.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		file, err := os.OpenFile(config.Logging.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o666)
 		if err == nil {
 			return log.New(file, "", log.LstdFlags|log.Lshortfile)
 		} else {
