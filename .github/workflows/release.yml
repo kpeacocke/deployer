@@ -28,13 +28,13 @@ jobs:
             repo: context.repo.repo,
             run_id: runId,
           });
-          
+
           const allSuccess = jobs.jobs.every(job => job.conclusion === 'success');
           console.log('All CI jobs successful:', allSuccess);
           console.log('Jobs:', jobs.jobs.map(j => ({ name: j.name, conclusion: j.conclusion })));
-          
+
           core.setOutput('should-release', allSuccess.toString());
-          
+
           if (!allSuccess) {
             console.log('❌ Not all CI jobs passed - skipping release');
           } else {
