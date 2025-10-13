@@ -28,6 +28,19 @@ A Go-based GitHub release deployer with blue/green deployment, designed to run o
 
 ## Installation
 
+### Quick Install Script (Recommended)
+
+```bash
+# Install latest version to /usr/local/bin
+curl -fsSL https://raw.githubusercontent.com/kpeacocke/deployer/main/install.sh | bash
+
+# Install specific version
+curl -fsSL https://raw.githubusercontent.com/kpeacocke/deployer/main/install.sh | bash -s v1.0.0
+
+# Install to custom location
+curl -fsSL https://raw.githubusercontent.com/kpeacocke/deployer/main/install.sh | bash -s latest /opt/bin
+```
+
 ### Download Pre-built Binaries
 
 Download the latest release for your platform from the [releases page](https://github.com/kpeacocke/deployer/releases):
@@ -48,6 +61,8 @@ go install github.com/kpeacocke/deployer@latest
 # Install specific version
 go install github.com/kpeacocke/deployer@v1.0.0
 ```
+
+> 📦 **Go Module**: Available on [pkg.go.dev](https://pkg.go.dev/github.com/kpeacocke/deployer) with full documentation
 
 ### Build from Source
 
