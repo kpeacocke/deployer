@@ -1,0 +1,27 @@
+{
+  "projectName": "gh-deployer",
+  "projectOwner": "kpeacocke",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "kpeacocke",
+      "name": "kpeacocke",
+      "avatar_url": "https://github.com/kpeacocke.png",
+      "profile": "https://github.com/kpeacocke",
+      "contributions": [
+        "code",
+        "doc",
+        "infra",
+        "test"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}

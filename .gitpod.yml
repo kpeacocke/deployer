@@ -1,0 +1,31 @@
+# Gitpod configuration for cloud development environment
+tasks:
+  - name: Setup
+    init: |
+      # Install dependencies
+      make deps
+
+      # Build the project
+      make build
+    command: |
+      # Start in development mode
+      echo "🚀 Ready to develop gh-deployer!"
+      echo "Run 'make test' to run tests"
+      echo "Run 'make build' to build the binary"
+      echo "Run './gh-deployer --help' for usage"
+
+ports:
+  - port: 8080
+    onOpen: ignore
+
+vscode:
+  extensions:
+    - golang.go
+    - ms-vscode.vscode-json
+    - redhat.vscode-yaml
+    - davidanson.vscode-markdownlint
+    - ms-vscode.makefile-tools
+    - github.vscode-pull-request-github
+    - eamodio.gitlens
+
+# Prebuilds are now configured via Gitpod Project Settings
