@@ -1,0 +1,39 @@
+# Docker Compose for gh-deployer development and testing
+
+version: '3.8'
+
+services:
+  gh-deployer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gh-deployer
+    restart: unless-stopped
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - ./config.example.yaml:/app/config.yaml:ro
+      - ./logs:/app/logs
+      - deployer_state:/app/state
+    command: ["--config", "/app/config.yaml", "--dry-run"]
+    networks:
+      - deployer-net
+
+  # Example: Add monitoring container
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #   networks:
+  #     - deployer-net
+
+volumes:
+  deployer_state:
+    driver: local
+
+networks:
+  deployer-net:
+    driver: bridge

@@ -1,0 +1,26 @@
+# Example configuration for gh-deployer
+# Copy this to config.yaml and customize for your environment
+
+repo: "your-user/your-repo"           # GitHub repository to monitor
+asset_suffix: ".tar.gz"              # Release asset filter
+check_interval_seconds: 300          # Check every 5 minutes
+install_dir: "/opt/myapp/deployments" # Blue/green deployment root
+current_symlink: "/opt/myapp/current" # Active deployment pointer
+run_command: "poetry run python main.py" # App startup command
+post_deploy_script: "deploy.sh"      # Post-deployment hook script
+state_file: "/opt/myapp/gh-deployer/state.yaml" # State persistence file
+
+# Optional: GitHub token for API access (recommended to use GITHUB_TOKEN env var)
+# github_token: "ghp_your_token_here"
+
+# Optional: Health check configuration
+# health_check_url: "http://localhost:8080/health"
+health_check_timeout: 30             # Health check timeout in seconds
+
+# Logging configuration
+logging:
+  level: "info"                       # Log level: debug, info, warn, error
+  file: "/var/log/gh-deployer/deployer.log" # Log file path (optional)
+  max_size: "100MB"                   # Log rotation size
+  max_backups: 5                      # Number of backup log files
+  max_age: 30                         # Days to retain log files

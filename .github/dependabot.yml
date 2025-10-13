@@ -1,0 +1,64 @@
+# Dependabot configuration for security updates
+version: 2
+
+updates:
+  # Go modules
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "04:00"
+      timezone: "America/New_York"
+    commit-message:
+      prefix: "build(deps)"
+      include: "scope"
+    reviewers:
+      - "kpeacocke"
+    assignees:
+      - "kpeacocke"
+    labels:
+      - "dependencies"
+      - "go"
+    open-pull-requests-limit: 5
+    rebase-strategy: "auto"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "04:00"
+      timezone: "America/New_York"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    reviewers:
+      - "kpeacocke"
+    assignees:
+      - "kpeacocke"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    open-pull-requests-limit: 5
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "04:00"
+      timezone: "America/New_York"
+    commit-message:
+      prefix: "build(deps)"
+      include: "scope"
+    reviewers:
+      - "kpeacocke"
+    assignees:
+      - "kpeacocke"
+    labels:
+      - "dependencies"
+      - "docker"
+    open-pull-requests-limit: 3

@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Get tag info
+      id: tag_info
+      run: |
+        echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Build for multiple platforms
+      run: |
+        # Linux AMD64
+        GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-linux-amd64 .
+
+        # Linux ARM64
+        GOOS=linux GOARCH=arm64 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-linux-arm64 .
+
+        # Linux ARM (Raspberry Pi)
+        GOOS=linux GOARCH=arm GOARM=7 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-linux-armv7 .
+
+        # macOS AMD64
+        GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-darwin-amd64 .
+
+        # macOS ARM64
+        GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-darwin-arm64 .
+
+    - name: Create checksums
+      run: |
+        sha256sum gh-deployer-* > checksums.txt
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        if [ -f CHANGELOG.md ]; then
+          # Extract changelog for this version
+          sed -n "/## \[${{ steps.tag_info.outputs.version }}\]/,/## \[/p" CHANGELOG.md | sed '$d' > release-notes.md
+        else
+          echo "Release ${{ steps.tag_info.outputs.tag }}" > release-notes.md
+        fi
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        body_path: release-notes.md
+        files: |
+          gh-deployer-*
+          checksums.txt
+        draft: false
+        prerelease: false
+        generate_release_notes: true

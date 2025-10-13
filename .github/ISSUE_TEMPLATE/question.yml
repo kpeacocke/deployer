@@ -1,0 +1,64 @@
+name: Question or Support
+description: Ask a question or get help using gh-deployer
+title: "[Question]: "
+labels: ["question", "help wanted"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before asking a question, please:
+        - Check the [README.md](https://github.com/kpeacocke/deployer/blob/main/README.md)
+        - Check the [documentation](https://github.com/kpeacocke/deployer/blob/main/.github/copilot-instructions.md)
+        - Search existing issues for similar questions
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of gh-deployer are you using?
+      placeholder: v1.0.0
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know?
+      placeholder: How do I...?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant context about your setup or what you're trying to achieve.
+      placeholder: I'm trying to deploy a Python application...
+
+  - type: textarea
+    id: what-tried
+    attributes:
+      label: What Have You Tried?
+      description: What have you already tried to solve this?
+      placeholder: I tried...
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration
+      description: Share your configuration if relevant (remove sensitive information)
+      render: yaml
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: What environment are you deploying to?
+      options:
+        - Raspberry Pi
+        - Linux Server
+        - macOS
+        - Docker Container
+        - Cloud Instance
+        - Other
