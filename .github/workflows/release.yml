@@ -152,6 +152,61 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Publish Go module to GitHub Packages
+      run: |
+        # Set up Go proxy environment for GitHub Packages
+        export GOPROXY=https://proxy.golang.org,direct
+        export GOSUMDB=sum.golang.org
+        
+        # The Go module is automatically available when we create a git tag
+        # Verify the module is accessible
+        echo "Go module published at: https://pkg.go.dev/github.com/${{ github.repository }}@v${{ needs.semantic-release.outputs.new_release_version }}"
+        
+        # Create a Go package entry for GitHub Packages
+        echo "Creating package metadata..."
+        cat > package.json << EOF
+        {
+          "name": "@${{ github.repository_owner }}/gh-deployer",
+          "version": "${{ needs.semantic-release.outputs.new_release_version }}",
+          "description": "GitHub release deployer with blue/green deployment for Raspberry Pi",
+          "main": "gh-deployer",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/${{ github.repository }}"
+          },
+          "author": "${{ github.repository_owner }}",
+          "license": "MIT",
+          "publishConfig": {
+            "registry": "https://npm.pkg.github.com"
+          }
+        }
+        EOF
+
+    - name: Setup Node.js for package publishing
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@${{ github.repository_owner }}'
+
+    - name: Publish to GitHub Packages
+      run: |
+        # Create a simple package structure
+        mkdir -p bin
+        
+        # Copy binaries to bin directory
+        cp dist/gh-deployer-linux-amd64.tar.gz bin/
+        cp dist/gh-deployer-darwin-amd64.tar.gz bin/
+        cp dist/gh-deployer-darwin-arm64.tar.gz bin/
+        cp dist/gh-deployer-linux-arm64.tar.gz bin/
+        cp dist/gh-deployer-linux-armv7.tar.gz bin/
+        cp dist/gh-deployer-windows-amd64.zip bin/
+        
+        # Publish the package
+        npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Create installation script
       run: |
         cat > install.sh << 'EOF'

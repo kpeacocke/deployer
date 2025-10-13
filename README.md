@@ -8,6 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/kpeacocke/deployer)](https://github.com/kpeacocke/deployer/blob/main/go.mod)
+[![GitHub Package](https://img.shields.io/github/v/release/kpeacocke/deployer?label=package&logo=github)](https://github.com/kpeacocke/deployer/pkgs/npm/gh-deployer)
 [![GitHub issues](https://img.shields.io/github/issues/kpeacocke/deployer)](https://github.com/kpeacocke/deployer/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/kpeacocke/deployer)](https://github.com/kpeacocke/deployer/pulls)
 [![Downloads](https://img.shields.io/github/downloads/kpeacocke/deployer/total)](https://github.com/kpeacocke/deployer/releases)
@@ -62,7 +63,17 @@ go install github.com/kpeacocke/deployer@latest
 go install github.com/kpeacocke/deployer@v1.0.0
 ```
 
-> 📦 **Go Module**: Available on [pkg.go.dev](https://pkg.go.dev/github.com/kpeacocke/deployer) with full documentation
+### GitHub Packages
+
+The project is also published as a GitHub Package with pre-built binaries:
+
+```bash
+# View package details
+# https://github.com/kpeacocke/deployer/pkgs/npm/gh-deployer
+```
+
+> 📦 **Go Module**: Available on [pkg.go.dev](https://pkg.go.dev/github.com/kpeacocke/deployer) with full documentation  
+> 📦 **GitHub Package**: Published to GitHub Packages with every release
 
 ### Build from Source
 
