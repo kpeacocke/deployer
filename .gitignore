@@ -21,7 +21,6 @@ vendor/
 
 # Go workspace file
 go.work
-go.sum
 
 # IDE and Editor files
 .vscode/
