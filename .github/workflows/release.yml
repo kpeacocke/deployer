@@ -1,40 +1,47 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
-  test:
-    name: Test Before Release
+  semantic-release:
+    name: Semantic Release
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
       with:
-        go-version: '1.23'
-        cache: true
+        fetch-depth: 0
+        persist-credentials: false
 
-    - name: Run tests
-      run: go test -race ./...
-
-    - name: Run linter
-      uses: golangci/golangci-lint-action@v6
+    - name: Semantic Release
+      id: semantic
+      uses: cycjimmy/semantic-release-action@v4
       with:
-        version: latest
-        args: --timeout=5m
+        semantic_version: 19
+        extra_plugins: |
+          @semantic-release/changelog@6
+          @semantic-release/git@10
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  release:
-    name: Create Release
+  build-release:
+    name: Build and Release
     runs-on: ubuntu-latest
-    needs: test
+    needs: semantic-release
+    if: needs.semantic-release.outputs.new_release_published == 'true'
 
     steps:
     - name: Checkout code
@@ -46,58 +53,63 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.23'
-
-    - name: Get tag info
-      id: tag_info
-      run: |
-        echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-        echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        cache: true
 
     - name: Build for multiple platforms
+      env:
+        VERSION: ${{ needs.semantic-release.outputs.new_release_version }}
       run: |
-        VERSION="${{ steps.tag_info.outputs.version }}"
         BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
         LDFLAGS="-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
 
+        mkdir -p dist
+
         # Linux AMD64
-        GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o gh-deployer-linux-amd64 .
+        GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-amd64 .
 
         # Linux ARM64
-        GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o gh-deployer-linux-arm64 .
+        GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-arm64 .
 
         # Linux ARM (Raspberry Pi)
-        GOOS=linux GOARCH=arm GOARM=7 go build -ldflags "${LDFLAGS}" -o gh-deployer-linux-armv7 .
+        GOOS=linux GOARCH=arm GOARM=7 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-armv7 .
 
         # macOS AMD64 (Intel)
-        GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o gh-deployer-darwin-amd64 .
+        GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-darwin-amd64 .
 
         # macOS ARM64 (Apple Silicon)
-        GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o gh-deployer-darwin-arm64 .
+        GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-darwin-arm64 .
 
         # Windows AMD64
-        GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o gh-deployer-windows-amd64.exe .
+        GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-windows-amd64.exe .
+
+    - name: Create archives
+      run: |
+        cd dist
+        # Create tar.gz for Unix systems
+        for file in gh-deployer-linux-* gh-deployer-darwin-*; do
+          if [ -f "$file" ]; then
+            tar -czf "${file}.tar.gz" "$file"
+            rm "$file"
+          fi
+        done
+
+        # Create zip for Windows
+        if [ -f "gh-deployer-windows-amd64.exe" ]; then
+          zip "gh-deployer-windows-amd64.zip" "gh-deployer-windows-amd64.exe"
+          rm "gh-deployer-windows-amd64.exe"
+        fi
 
     - name: Create checksums
       run: |
-        sha256sum gh-deployer-* > checksums.txt
+        cd dist
+        sha256sum *.tar.gz *.zip > checksums.txt
 
-    - name: Generate changelog
-      id: changelog
-      run: |
-        if [ -f CHANGELOG.md ]; then
-          # Extract changelog for this version
-          sed -n "/## \[${{ steps.tag_info.outputs.version }}\]/,/## \[/p" CHANGELOG.md | sed '$d' > release-notes.md
-        else
-          echo "Release ${{ steps.tag_info.outputs.tag }}" > release-notes.md
-        fi
-
-    - name: Create Release
+    - name: Upload Release Assets
       uses: softprops/action-gh-release@v2
       with:
-        body_path: release-notes.md
+        tag_name: v${{ needs.semantic-release.outputs.new_release_version }}
         files: |
-          gh-deployer-*
-          checksums.txt
-        draft: false
-        prerelease: false
+          dist/*
         generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
