@@ -91,6 +91,17 @@ config.local.yml
 state.yaml
 state.yml
 
+# Node.js dependencies and files (for CI tools like semantic-release)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.npm
+.eslintcache
+.nyc_output
+
 # Python files (for deployed applications)
 .venv/
 .env/
