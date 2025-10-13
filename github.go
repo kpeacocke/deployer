@@ -12,10 +12,8 @@ import (
 
 // GitHubClient handles GitHub API interactions
 type GitHubClient struct {
-	token         string
-	client        *http.Client
-	lastCheck     time.Time
-	cachedRelease *Release
+	token  string
+	client *http.Client
 }
 
 // Release represents a GitHub release

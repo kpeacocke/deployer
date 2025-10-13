@@ -34,7 +34,7 @@ func TestGitHubClient_GetLatestRelease(t *testing.T) {
 		
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
-		w.Write([]byte(response))
+		_, _ = w.Write([]byte(response))
 	}))
 	defer server.Close()
 
@@ -67,7 +67,7 @@ func TestGitHubClient_GetLatestRelease_WithAuth(t *testing.T) {
 		response := `{"tag_name": "v1.0.0", "assets": []}`
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
-		w.Write([]byte(response))
+		_, _ = w.Write([]byte(response))
 	}))
 	defer server.Close()
 
