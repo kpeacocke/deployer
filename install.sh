@@ -35,6 +35,17 @@ echo "Downloading gh-deployer ${VERSION} for ${PLATFORM}/${ARCH}..."
 curl -sL "$DOWNLOAD_URL" | tar -xz
 
 echo "Installing to ${INSTALL_DIR}/gh-deployer..."
+
+# Create install directory if it doesn't exist
+if [ ! -d "$INSTALL_DIR" ]; then
+  if [ -w "$(dirname "$INSTALL_DIR")" ]; then
+    mkdir -p "$INSTALL_DIR"
+  else
+    sudo mkdir -p "$INSTALL_DIR"
+  fi
+fi
+
+# Install the binary
 if [ -w "$INSTALL_DIR" ]; then
   mv "$BINARY_NAME" "${INSTALL_DIR}/gh-deployer"
   chmod +x "${INSTALL_DIR}/gh-deployer"
