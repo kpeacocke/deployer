@@ -1,6 +1,20 @@
 # gh-deployer
 
+[![CI Status](https://github.com/kpeacocke/deployer/actions/workflows/ci.yml/badge.svg)](https://github.com/kpeacocke/deployer/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/kpeacocke/deployer/actions/workflows/codeql.yml/badge.svg)](https://github.com/kpeacocke/deployer/actions/workflows/codeql.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kpeacocke/deployer)](https://goreportcard.com/report/github.com/kpeacocke/deployer)
+[![GoDoc](https://godoc.org/github.com/kpeacocke/deployer?status.svg)](https://godoc.org/github.com/kpeacocke/deployer)
+[![Release](https://img.shields.io/github/release/kpeacocke/deployer.svg)](https://github.com/kpeacocke/deployer/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![Go Version](https://img.shields.io/github/go-mod/go-version/kpeacocke/deployer)](https://github.com/kpeacocke/deployer/blob/main/go.mod)
+[![GitHub issues](https://img.shields.io/github/issues/kpeacocke/deployer)](https://github.com/kpeacocke/deployer/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/kpeacocke/deployer)](https://github.com/kpeacocke/deployer/pulls)
+[![Downloads](https://img.shields.io/github/downloads/kpeacocke/deployer/total)](https://github.com/kpeacocke/deployer/releases)
+
 A Go-based GitHub release deployer with blue/green deployment, designed to run on Raspberry Pi and launch Python apps using Poetry.
+
+> 🚀 **Automatic releases**: Every push to main automatically creates a new release using semantic versioning!
 
 ## Features
 
@@ -12,12 +26,40 @@ A Go-based GitHub release deployer with blue/green deployment, designed to run o
 - Structured logging and monitoring
 - Health checks and rollback support
 
+## Installation
+
+### Download Pre-built Binaries
+
+Download the latest release for your platform from the [releases page](https://github.com/kpeacocke/deployer/releases):
+
+- **Linux AMD64**: `gh-deployer-linux-amd64.tar.gz`
+- **Linux ARM64**: `gh-deployer-linux-arm64.tar.gz` 
+- **Linux ARMv7** (Raspberry Pi): `gh-deployer-linux-armv7.tar.gz`
+- **macOS Intel**: `gh-deployer-darwin-amd64.tar.gz`
+- **macOS Apple Silicon**: `gh-deployer-darwin-arm64.tar.gz`
+- **Windows**: `gh-deployer-windows-amd64.zip`
+
+### Install via Go
+
+```bash
+# Install latest version
+go install github.com/kpeacocke/deployer@latest
+
+# Install specific version
+go install github.com/kpeacocke/deployer@v1.0.0
+```
+
+### Build from Source
+
+```bash
+git clone https://github.com/kpeacocke/deployer.git
+cd deployer
+make build
+```
+
 ## Quick Start
 
-1. **Build the application:**
-   ```bash
-   make build
-   ```
+1. **Get the binary** (see installation options above)
 
 2. **Configure the deployer:**
    Edit `config.yaml` with your repository and deployment settings:
@@ -72,3 +114,41 @@ The deployer implements a blue/green deployment strategy:
 - Health checks before activation
 
 For detailed architecture information, see `.github/copilot-instructions.md`.
+
+## Automatic Releases 🚀
+
+This project uses **automatic semantic versioning** - every push to `main` triggers a release if there are new features or fixes!
+
+### Commit Message Format
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) for automatic version bumping:
+
+- `feat:` - New feature → **Minor version** (e.g., 1.0.0 → 1.1.0)
+- `fix:` - Bug fix → **Patch version** (e.g., 1.0.0 → 1.0.1) 
+- `perf:` - Performance improvement → **Patch version**
+- `BREAKING CHANGE:` - Breaking change → **Major version** (e.g., 1.0.0 → 2.0.0)
+
+### Examples
+
+```bash
+git commit -m "feat: add health check endpoint"     # → 1.1.0
+git commit -m "fix: resolve memory leak"            # → 1.0.1  
+git commit -m "feat!: redesign configuration API"   # → 2.0.0
+```
+
+Every successful commit to main automatically:
+- ✅ Runs full test suite and linting
+- 🏷️ Creates a new semantic version tag
+- 📦 Builds binaries for all platforms
+- 🚀 Publishes GitHub release with assets
+- 📖 Updates CHANGELOG.md automatically
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Use conventional commits: `git commit -m "feat: add amazing feature"`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+Your changes will be automatically released when merged to main!

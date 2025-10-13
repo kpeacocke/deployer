@@ -1,0 +1,140 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+        cache: true
+
+    - name: Run tests
+      run: go test -race ./...
+
+    - name: Run linter
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: latest
+        args: --timeout=5m
+
+  semantic-release:
+    name: Semantic Release
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Semantic Release
+      id: semantic
+      uses: cycjimmy/semantic-release-action@v4
+      with:
+        semantic_version: 19
+        extra_plugins: |
+          @semantic-release/changelog@6
+          @semantic-release/git@10
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    needs: semantic-release
+    if: needs.semantic-release.outputs.new_release_published == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+        cache: true
+
+    - name: Build for multiple platforms
+      env:
+        VERSION: ${{ needs.semantic-release.outputs.new_release_version }}
+      run: |
+        BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+        LDFLAGS="-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
+        
+        mkdir -p dist
+        
+        # Linux AMD64
+        GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-amd64 .
+        
+        # Linux ARM64
+        GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-arm64 .
+        
+        # Linux ARM (Raspberry Pi)
+        GOOS=linux GOARCH=arm GOARM=7 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-armv7 .
+        
+        # macOS AMD64 (Intel)
+        GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-darwin-amd64 .
+        
+        # macOS ARM64 (Apple Silicon)
+        GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-darwin-arm64 .
+        
+        # Windows AMD64
+        GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-windows-amd64.exe .
+
+    - name: Create archives
+      run: |
+        cd dist
+        # Create tar.gz for Unix systems
+        for file in gh-deployer-linux-* gh-deployer-darwin-*; do
+          if [ -f "$file" ]; then
+            tar -czf "${file}.tar.gz" "$file"
+            rm "$file"
+          fi
+        done
+        
+        # Create zip for Windows
+        if [ -f "gh-deployer-windows-amd64.exe" ]; then
+          zip "gh-deployer-windows-amd64.zip" "gh-deployer-windows-amd64.exe"
+          rm "gh-deployer-windows-amd64.exe"
+        fi
+
+    - name: Create checksums
+      run: |
+        cd dist
+        sha256sum *.tar.gz *.zip > checksums.txt
+
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ needs.semantic-release.outputs.new_release_version }}
+        files: |
+          dist/*
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
