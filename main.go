@@ -3,16 +3,40 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
+// Version information (set by build flags)
+var (
+	Version   = "dev"
+	BuildTime = "unknown"
+)
+
 func main() {
-	configPath := flag.String("config", "config.yaml", "Path to configuration file")
-	dryRun := flag.Bool("dry-run", false, "Perform a dry run without making changes")
+	var (
+		configPath  = flag.String("config", "config.yaml", "Path to configuration file")
+		dryRun      = flag.Bool("dry-run", false, "Perform a dry run without making changes")
+		showVersion = flag.Bool("version", false, "Show version information")
+		showHelp    = flag.Bool("help", false, "Show help information")
+	)
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("gh-deployer version %s\nBuilt: %s\n", Version, BuildTime)
+		os.Exit(0)
+	}
+
+	if *showHelp {
+		fmt.Println("GitHub Release Deployer - Blue/Green deployment tool")
+		fmt.Println("")
+		fmt.Println("Usage:")
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
 
 	// Load configuration
 	config, err := LoadConfig(*configPath)

@@ -9,9 +9,32 @@ permissions:
   contents: write
 
 jobs:
+  test:
+    name: Test Before Release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+        cache: true
+
+    - name: Run tests
+      run: go test -race ./...
+
+    - name: Run linter
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: latest
+        args: --timeout=5m
+
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    needs: test
 
     steps:
     - name: Checkout code
@@ -32,20 +55,27 @@ jobs:
 
     - name: Build for multiple platforms
       run: |
+        VERSION="${{ steps.tag_info.outputs.version }}"
+        BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+        LDFLAGS="-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
+        
         # Linux AMD64
-        GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-linux-amd64 .
-
+        GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o gh-deployer-linux-amd64 .
+        
         # Linux ARM64
-        GOOS=linux GOARCH=arm64 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-linux-arm64 .
-
+        GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o gh-deployer-linux-arm64 .
+        
         # Linux ARM (Raspberry Pi)
-        GOOS=linux GOARCH=arm GOARM=7 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-linux-armv7 .
-
-        # macOS AMD64
-        GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-darwin-amd64 .
-
-        # macOS ARM64
-        GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.Version=${{ steps.tag_info.outputs.version }} -X main.BuildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gh-deployer-darwin-arm64 .
+        GOOS=linux GOARCH=arm GOARM=7 go build -ldflags "${LDFLAGS}" -o gh-deployer-linux-armv7 .
+        
+        # macOS AMD64 (Intel)
+        GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o gh-deployer-darwin-amd64 .
+        
+        # macOS ARM64 (Apple Silicon)
+        GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o gh-deployer-darwin-arm64 .
+        
+        # Windows AMD64
+        GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o gh-deployer-windows-amd64.exe .
 
     - name: Create checksums
       run: |

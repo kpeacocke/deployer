@@ -61,3 +61,22 @@ dev-build:
 # Run in development mode with file watching
 dev-run:
 	./$(BINARY_NAME) --config config.yaml --dry-run
+
+# Build for all platforms (testing releases locally)
+build-all:
+	@echo "Building for all platforms..."
+	GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o dist/gh-deployer-linux-amd64 .
+	GOOS=linux GOARCH=arm64 go build ${LDFLAGS} -o dist/gh-deployer-linux-arm64 .
+	GOOS=linux GOARCH=arm GOARM=7 go build ${LDFLAGS} -o dist/gh-deployer-linux-armv7 .
+	GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o dist/gh-deployer-darwin-amd64 .
+	GOOS=darwin GOARCH=arm64 go build ${LDFLAGS} -o dist/gh-deployer-darwin-arm64 .
+	GOOS=windows GOARCH=amd64 go build ${LDFLAGS} -o dist/gh-deployer-windows-amd64.exe .
+	@echo "All binaries built in dist/ directory"
+
+# Test version output
+test-version: build
+	./$(BINARY_NAME) --version
+
+# Test help output  
+test-help: build
+	./$(BINARY_NAME) --help
