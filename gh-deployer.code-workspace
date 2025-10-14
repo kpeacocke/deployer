@@ -7,14 +7,12 @@
     "settings": {
         // Workspace-level extension control
         // These override user settings for this workspace only
-        
         // Disable extensions that are commonly installed but not needed for Go
         "extensions.autoCheckUpdates": false,
         "extensions.autoUpdate": false,
-        
         // Language-specific disabling for this workspace
         "python.defaultInterpreterPath": "",
-        "python.languageServer": "None", 
+        "python.languageServer": "None",
         "python.analysis.disabled": true,
         "typescript.suggest.enabled": false,
         "javascript.suggest.enabled": false,
@@ -26,7 +24,6 @@
         "css.validate": false,
         "html.validate.scripts": false,
         "html.validate.styles": false,
-        
         // Disable heavy features for performance
         "editor.minimap.enabled": false,
         "editor.hover.enabled": true,
@@ -36,19 +33,16 @@
             "comments": false,
             "strings": false
         },
-        
         // Focused search
         "search.showLineNumbers": true,
         "search.smartCase": true,
         "search.globalFindClipboard": false,
-        
         // Simplified workbench for Go development
         "workbench.activityBar.location": "default",
         "workbench.editor.enablePreview": false,
         "workbench.editor.enablePreviewFromQuickOpen": false,
         "workbench.startupEditor": "none",
         "workbench.tips.enabled": false,
-        
         // File watching optimizations
         "files.watcherExclude": {
             "**/dist/**": true,
@@ -74,20 +68,17 @@
             // Deprecated/unmaintained
             "golang.go-nightly",
             "lukehoban.go-outline",
-            
             // Game development
             "geequlim.godot-tools",
             "ms-vscode.godot-tools",
             "unity.unity-debug",
-            
             // Infrastructure/DevOps
             "redhat.ansible",
-            "ms-ansible.ansible", 
+            "ms-ansible.ansible",
             "hashicorp.terraform",
             "ms-kubernetes-tools.vscode-kubernetes-tools",
             "ms-azuretools.vscode-docker",
             "ms-vscode-remote.remote-containers",
-            
             // Web development
             "esbenp.prettier-vscode",
             "bradlc.vscode-tailwindcss",
@@ -95,10 +86,9 @@
             "ms-vscode.vscode-css-peek",
             "formulahendry.auto-rename-tag",
             "ms-edgedevtools.vscode-edge-devtools",
-            
             // Other programming languages
             "ms-python.python",
-            "ms-python.vscode-pylance", 
+            "ms-python.vscode-pylance",
             "ms-python.debugpy",
             "ms-vscode.cpptools",
             "ms-vscode.cpptools-extension-pack",
@@ -107,7 +97,6 @@
             "vscjava.vscode-java-pack",
             "ms-vscode.vscode-typescript-next",
             "rust-lang.rust-analyzer",
-            
             // Heavy/specialized tools
             "ms-vscode.vscode-jupyter",
             "ms-toolsai.jupyter",

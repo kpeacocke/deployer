@@ -13,8 +13,6 @@ updates:
     commit-message:
       prefix: "build(deps)"
       include: "scope"
-    reviewers:
-      - "kpeacocke"
     assignees:
       - "kpeacocke"
     labels:
@@ -34,11 +32,7 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
-    reviewers:
-      - "kpeacocke"
     assignees:
-      - "kpeacocke"
-    labels:
       - "dependencies"
       - "github-actions"
     open-pull-requests-limit: 5

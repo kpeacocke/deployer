@@ -16,64 +16,64 @@ jobs:
     name: Check CI Success
     runs-on: ubuntu-latest
     outputs:
-      should-release: ${{ steps.check.outputs.should-release }}
+      should_release: ${{ steps.check.outputs.should_release }}
     steps:
-    - name: Check if all CI jobs succeeded
-      id: check
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const runId = context.payload.workflow_run.id;
-          const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            run_id: runId,
-          });
+      - name: Check if all CI jobs succeeded
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+            });
 
-          const allSuccess = jobs.jobs.every(job => job.conclusion === 'success');
-          console.log('All CI jobs successful:', allSuccess);
-          console.log('Jobs:', jobs.jobs.map(j => ({ name: j.name, conclusion: j.conclusion })));
+            const allSuccess = jobs.jobs.every(job => job.conclusion === 'success');
+            console.log('All CI jobs successful:', allSuccess);
+            console.log('Jobs:', jobs.jobs.map(j => ({ name: j.name, conclusion: j.conclusion })));
 
-          core.setOutput('should-release', allSuccess.toString());
+            core.setOutput('should_release', allSuccess ? 'true' : 'false');
 
-          if (!allSuccess) {
-            console.log('❌ Not all CI jobs passed - skipping release');
-          } else {
-            console.log('✅ All CI jobs passed - proceeding with release');
-          }
+            if (!allSuccess) {
+              console.log('❌ Not all CI jobs passed - skipping release');
+            } else {
+              console.log('✅ All CI jobs passed - proceeding with release');
+            }
 
   semantic-release:
     name: Semantic Release
     runs-on: ubuntu-latest
     needs: check-ci-success
-    if: needs.check-ci-success.outputs.should-release == 'true'
+    if: needs.check-ci-success.outputs.should_release == 'true'
     outputs:
       new_release_published: ${{ steps.semantic.outputs.new_release_published }}
       new_release_version: ${{ steps.semantic.outputs.new_release_version }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
-        persist-credentials: false
-        ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-    - name: Semantic Release
-      id: semantic
-      uses: cycjimmy/semantic-release-action@v4
-      with:
-        semantic_version: 19
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          semantic_version: 19
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Debug Semantic Release Outputs
-      run: |
-        echo "new_release_published: ${{ steps.semantic.outputs.new_release_published }}"
-        echo "new_release_version: ${{ steps.semantic.outputs.new_release_version }}"
-        echo "new_release_major_version: ${{ steps.semantic.outputs.new_release_major_version }}"
-        echo "new_release_minor_version: ${{ steps.semantic.outputs.new_release_minor_version }}"
-        echo "new_release_patch_version: ${{ steps.semantic.outputs.new_release_patch_version }}"
+      - name: Debug Semantic Release Outputs
+        run: |
+          echo "new_release_published: ${{ steps.semantic.outputs.new_release_published }}"
+          echo "new_release_version: ${{ steps.semantic.outputs.new_release_version }}"
+          echo "new_release_major_version: ${{ steps.semantic.outputs.new_release_major_version }}"
+          echo "new_release_minor_version: ${{ steps.semantic.outputs.new_release_minor_version }}"
+          echo "new_release_patch_version: ${{ steps.semantic.outputs.new_release_patch_version }}"
 
   build-release:
     name: Build and Release
@@ -82,182 +82,186 @@ jobs:
     if: needs.semantic-release.outputs.new_release_published == 'true'
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-    - name: Set up Go
-      uses: actions/setup-go@v6
-      with:
-        go-version: '1.23'
-        cache: true
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.23"
+          cache: true
 
-    - name: Build for multiple platforms
-      env:
-        VERSION: ${{ needs.semantic-release.outputs.new_release_version }}
-      run: |
-        BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
-        LDFLAGS="-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
+      - name: Build for multiple platforms
+        env:
+          VERSION: ${{ needs.semantic-release.outputs.new_release_version }}
+        run: |
+          BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+          LDFLAGS="-X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}"
 
-        mkdir -p dist
+          mkdir -p dist
 
-        # Linux AMD64
-        GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-amd64 .
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-amd64 .
 
-        # Linux ARM64
-        GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-arm64 .
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-arm64 .
 
-        # Linux ARM (Raspberry Pi)
-        GOOS=linux GOARCH=arm GOARM=7 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-armv7 .
+          # Linux ARM (Raspberry Pi)
+          GOOS=linux GOARCH=arm GOARM=7 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-linux-armv7 .
 
-        # macOS AMD64 (Intel)
-        GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-darwin-amd64 .
+          # macOS AMD64 (Intel)
+          GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-darwin-amd64 .
 
-        # macOS ARM64 (Apple Silicon)
-        GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-darwin-arm64 .
+          # macOS ARM64 (Apple Silicon)
+          GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-darwin-arm64 .
 
-        # Windows AMD64
-        GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-windows-amd64.exe .
+          # Windows AMD64
+          GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o dist/gh-deployer-windows-amd64.exe .
 
-    - name: Create archives
-      run: |
-        cd dist
-        # Create tar.gz for Unix systems
-        for file in gh-deployer-linux-* gh-deployer-darwin-*; do
-          if [ -f "$file" ]; then
-            tar -czf "${file}.tar.gz" "$file"
-            rm "$file"
+      - name: Create archives
+        run: |
+          cd dist
+          # Create tar.gz for Unix systems
+          for file in gh-deployer-linux-* gh-deployer-darwin-*; do
+            if [ -f "$file" ]; then
+              tar -czf "${file}.tar.gz" "$file"
+              rm "$file"
+            fi
+          done
+
+          # Create zip for Windows
+          if [ -f "gh-deployer-windows-amd64.exe" ]; then
+            zip "gh-deployer-windows-amd64.zip" "gh-deployer-windows-amd64.exe"
+            rm "gh-deployer-windows-amd64.exe"
           fi
-        done
 
-        # Create zip for Windows
-        if [ -f "gh-deployer-windows-amd64.exe" ]; then
-          zip "gh-deployer-windows-amd64.zip" "gh-deployer-windows-amd64.exe"
-          rm "gh-deployer-windows-amd64.exe"
-        fi
+      - name: Create checksums
+        run: |
+          cd dist
+          sha256sum *.tar.gz *.zip > checksums.txt
 
-    - name: Create checksums
-      run: |
-        cd dist
-        sha256sum *.tar.gz *.zip > checksums.txt
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.semantic-release.outputs.new_release_version }}
+          files: |
+            dist/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Upload Release Assets
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: v${{ needs.semantic-release.outputs.new_release_version }}
-        files: |
-          dist/*
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish Go module to GitHub Packages
+        run: |
+          # Set up Go proxy environment for GitHub Packages
+          export GOPROXY=https://proxy.golang.org,direct
+          export GOSUMDB=sum.golang.org
 
-    - name: Publish Go module to GitHub Packages
-      run: |
-        # Set up Go proxy environment for GitHub Packages
-        export GOPROXY=https://proxy.golang.org,direct
-        export GOSUMDB=sum.golang.org
-        
-        # The Go module is automatically available when we create a git tag
-        # Verify the module is accessible
-        echo "Go module published at: https://pkg.go.dev/github.com/${{ github.repository }}@v${{ needs.semantic-release.outputs.new_release_version }}"
-        
-        # Create a Go package entry for GitHub Packages
-        echo "Creating package metadata..."
-        cat > package.json << EOF
-        {
-          "name": "@${{ github.repository_owner }}/gh-deployer",
-          "version": "${{ needs.semantic-release.outputs.new_release_version }}",
-          "description": "GitHub release deployer with blue/green deployment for Raspberry Pi",
-          "main": "gh-deployer",
-          "repository": {
-            "type": "git",
-            "url": "https://github.com/${{ github.repository }}"
-          },
-          "author": "${{ github.repository_owner }}",
-          "license": "MIT",
-          "publishConfig": {
-            "registry": "https://npm.pkg.github.com"
+          # The Go module is automatically available when we create a git tag
+          # Verify the module is accessible
+          echo "Go module published at: https://pkg.go.dev/github.com/${{ github.repository }}@v${{ needs.semantic-release.outputs.new_release_version }}"
+
+          # Create a Go package entry for GitHub Packages
+          echo "Creating package metadata..."
+          cat > package.json << EOF
+          {
+            "name": "@${{ github.repository_owner }}/gh-deployer",
+            "version": "${{ needs.semantic-release.outputs.new_release_version }}",
+            "description": "GitHub release deployer with blue/green deployment for Raspberry Pi",
+            "main": "gh-deployer",
+            "repository": {
+              "type": "git",
+              "url": "https://github.com/${{ github.repository }}"
+            },
+            "author": "${{ github.repository_owner }}",
+            "license": "MIT",
+            "publishConfig": {
+              "registry": "https://npm.pkg.github.com"
+            }
           }
-        }
-        EOF
+          EOF
 
-    - name: Setup Node.js for package publishing
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        registry-url: 'https://npm.pkg.github.com'
-        scope: '@${{ github.repository_owner }}'
+      - name: Setup Node.js for package publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@${{ github.repository_owner }}"
 
-    - name: Publish to GitHub Packages
-      run: |
-        # Create a simple package structure
-        mkdir -p bin
-        
-        # Copy binaries to bin directory
-        cp dist/gh-deployer-linux-amd64.tar.gz bin/
-        cp dist/gh-deployer-darwin-amd64.tar.gz bin/
-        cp dist/gh-deployer-darwin-arm64.tar.gz bin/
-        cp dist/gh-deployer-linux-arm64.tar.gz bin/
-        cp dist/gh-deployer-linux-armv7.tar.gz bin/
-        cp dist/gh-deployer-windows-amd64.zip bin/
-        
-        # Publish the package
-        npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to GitHub Packages
+        run: |
+          # Create a simple package structure
+          mkdir -p bin
 
-    - name: Create installation script
-      run: |
-        cat > install.sh << 'EOF'
-        #!/bin/bash
-        set -e
+          # Copy binaries to bin directory
+          cp dist/gh-deployer-linux-amd64.tar.gz bin/
+          cp dist/gh-deployer-darwin-amd64.tar.gz bin/
+          cp dist/gh-deployer-darwin-arm64.tar.gz bin/
+          cp dist/gh-deployer-linux-arm64.tar.gz bin/
+          cp dist/gh-deployer-linux-armv7.tar.gz bin/
+          cp dist/gh-deployer-windows-amd64.zip bin/
 
-        # gh-deployer installation script
-        VERSION="${1:-latest}"
-        INSTALL_DIR="${2:-/usr/local/bin}"
+          # Publish the package
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-        # Detect OS and architecture
-        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-        ARCH=$(uname -m)
+      - name: Create installation script
+        run: |
+          cat > install.sh << 'EOF'
+          #!/bin/bash
+          set -e
 
-        case $ARCH in
-          x86_64) ARCH="amd64" ;;
-          arm64|aarch64) ARCH="arm64" ;;
-          armv7l) ARCH="armv7" ;;
-          *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;;
-        esac
+          # gh-deployer installation script
+          VERSION="${1:-latest}"
+          INSTALL_DIR="${2:-/usr/local/bin}"
 
-        case $OS in
-          linux) PLATFORM="linux" ;;
-          darwin) PLATFORM="darwin" ;;
-          *) echo "Unsupported OS: $OS" >&2; exit 1 ;;
-        esac
+          # Detect OS and architecture
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m)
 
-        # Get latest version if not specified
-        if [ "$VERSION" = "latest" ]; then
-          VERSION=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
-        fi
+          case $ARCH in
+            x86_64) ARCH="amd64" ;;
+            arm64|aarch64) ARCH="arm64" ;;
+            armv7l) ARCH="armv7" ;;
+            *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;;
+          esac
 
-        # Download and install
-        BINARY_NAME="gh-deployer-${PLATFORM}-${ARCH}"
-        DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/${BINARY_NAME}.tar.gz"
+          case $OS in
+            linux) PLATFORM="linux" ;;
+            darwin) PLATFORM="darwin" ;;
+            *) echo "Unsupported OS: $OS" >&2; exit 1 ;;
+          esac
 
-        echo "Downloading gh-deployer ${VERSION} for ${PLATFORM}/${ARCH}..."
-        curl -sL "$DOWNLOAD_URL" | tar -xz
-        
-        echo "Installing to ${INSTALL_DIR}/gh-deployer..."
-        sudo mv "$BINARY_NAME" "${INSTALL_DIR}/gh-deployer"
-        sudo chmod +x "${INSTALL_DIR}/gh-deployer"
-        
-        echo "gh-deployer installed successfully!"
-        echo "Run 'gh-deployer --help' to get started."
-        EOF
+          # Get latest version if not specified
+          if [ "$VERSION" = "latest" ]; then
+            VERSION=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+          fi
 
-    - name: Add installation script to release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: v${{ needs.semantic-release.outputs.new_release_version }}
-        files: install.sh
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Download and install
+          BINARY_NAME="gh-deployer-${PLATFORM}-${ARCH}"
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/${BINARY_NAME}.tar.gz"
+
+          echo "Downloading gh-deployer ${VERSION} for ${PLATFORM}/${ARCH}..."
+          curl -sL "$DOWNLOAD_URL" | tar -xz
+
+          echo "Installing to ${INSTALL_DIR}/gh-deployer..."
+          # Create directory if it doesn't exist
+          if [ ! -d "${INSTALL_DIR}" ]; then
+            sudo mkdir -p "${INSTALL_DIR}"
+          fi
+          sudo mv "$BINARY_NAME" "${INSTALL_DIR}/gh-deployer"
+          sudo chmod +x "${INSTALL_DIR}/gh-deployer"
+
+          echo "gh-deployer installed successfully!"
+          echo "Run 'gh-deployer --help' to get started."
+          EOF
+
+      - name: Add installation script to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.semantic-release.outputs.new_release_version }}
+          files: install.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

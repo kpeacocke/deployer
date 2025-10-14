@@ -47,7 +47,7 @@ curl -fsSL https://raw.githubusercontent.com/kpeacocke/deployer/main/install.sh 
 Download the latest release for your platform from the [releases page](https://github.com/kpeacocke/deployer/releases):
 
 - **Linux AMD64**: `gh-deployer-linux-amd64.tar.gz`
-- **Linux ARM64**: `gh-deployer-linux-arm64.tar.gz` 
+- **Linux ARM64**: `gh-deployer-linux-arm64.tar.gz`
 - **Linux ARMv7** (Raspberry Pi): `gh-deployer-linux-armv7.tar.gz`
 - **macOS Intel**: `gh-deployer-darwin-amd64.tar.gz`
 - **macOS Apple Silicon**: `gh-deployer-darwin-arm64.tar.gz`
@@ -72,7 +72,7 @@ The project is also published as a GitHub Package with pre-built binaries:
 # https://github.com/kpeacocke/deployer/pkgs/npm/gh-deployer
 ```
 
-> 📦 **Go Module**: Available on [pkg.go.dev](https://pkg.go.dev/github.com/kpeacocke/deployer) with full documentation  
+> 📦 **Go Module**: Available on [pkg.go.dev](https://pkg.go.dev/github.com/kpeacocke/deployer) with full documentation
 > 📦 **GitHub Package**: Published to GitHub Packages with every release
 
 ### Build from Source
@@ -89,6 +89,7 @@ make build
 
 2. **Configure the deployer:**
    Edit `config.yaml` with your repository and deployment settings:
+
    ```yaml
    repo: "your-user/your-repo"
    asset_suffix: ".tar.gz"
@@ -98,11 +99,13 @@ make build
    ```
 
 3. **Test with dry run:**
+
    ```bash
    ./gh-deployer --dry-run
    ```
 
 4. **Install and run as systemd service:**
+
    ```bash
    make install
    make systemd-service
@@ -124,6 +127,7 @@ code deployer/gh-deployer.code-workspace
 ```
 
 This workspace configuration:
+
 - ✅ **Enables only Go-relevant extensions** (golang.go, YAML, Markdown, Git tools)
 - ✅ **Disables language features** for Python, Ansible, Docker, TypeScript, etc.
 - ✅ **Optimizes performance** (disabled minimap, telemetry, file watching exclusions)
@@ -153,6 +157,7 @@ See `config.yaml` for all configuration options. Key settings:
 ## Architecture
 
 The deployer implements a blue/green deployment strategy:
+
 - Two deployment slots (`blue` and `green`) with separate Poetry virtual environments
 - Atomic symlink switching for zero-downtime deployments
 - State persistence in `state.yaml`
@@ -170,7 +175,7 @@ This project uses **automatic semantic versioning** - every push to `main` trigg
 Use [Conventional Commits](https://www.conventionalcommits.org/) for automatic version bumping:
 
 - `feat:` - New feature → **Minor version** (e.g., 1.0.0 → 1.1.0)
-- `fix:` - Bug fix → **Patch version** (e.g., 1.0.0 → 1.0.1) 
+- `fix:` - Bug fix → **Patch version** (e.g., 1.0.0 → 1.0.1)
 - `perf:` - Performance improvement → **Patch version**
 - `BREAKING CHANGE:` - Breaking change → **Major version** (e.g., 1.0.0 → 2.0.0)
 
@@ -178,11 +183,12 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) for automatic v
 
 ```bash
 git commit -m "feat: add health check endpoint"     # → 1.1.0
-git commit -m "fix: resolve memory leak"            # → 1.0.1  
+git commit -m "fix: resolve memory leak"            # → 1.0.1
 git commit -m "feat!: redesign configuration API"   # → 2.0.0
 ```
 
 Every successful commit to main automatically:
+
 - ✅ Runs full test suite and linting
 - 🏷️ Creates a new semantic version tag
 - 📦 Builds binaries for all platforms
