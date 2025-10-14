@@ -113,6 +113,26 @@ make build
 
 ## Development
 
+### VS Code Setup (Recommended)
+
+For the best development experience, open this project as a workspace:
+
+```bash
+# Clone and open as workspace (optimal extension management)
+git clone https://github.com/kpeacocke/deployer.git
+code deployer/gh-deployer.code-workspace
+```
+
+This workspace configuration:
+- ✅ **Enables only Go-relevant extensions** (golang.go, YAML, Markdown, Git tools)
+- ✅ **Disables language features** for Python, Ansible, Docker, TypeScript, etc.
+- ✅ **Optimizes performance** (disabled minimap, telemetry, file watching exclusions)
+- ✅ **Provides consistent setup** for all contributors
+
+> **Note**: If you have many extensions installed globally (Ansible, Godot, Python, etc.), you may need to manually disable them for this workspace. See `.vscode/README.md` for details.
+
+### Build Commands
+
 - **Run tests:** `make test`
 - **Test with coverage:** `make test-coverage`
 - **Format code:** `make fmt`

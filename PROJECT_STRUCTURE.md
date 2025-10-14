@@ -21,7 +21,8 @@ gh-deployer/
 │   ├── extensions.json         # Recommended extensions
 │   ├── launch.json             # Debug configurations
 │   ├── settings.json           # Workspace settings
-│   └── tasks.json              # Build tasks
+│   ├── tasks.json              # Build tasks
+│   └── README.md               # Extension management guide
 ├── docs/                       # Documentation (future)
 ├── examples/                   # Usage examples (future)
 ├── scripts/                    # Utility scripts (future)
@@ -78,7 +79,7 @@ gh-deployer/
 
 - **`Makefile`** - Build, test, and development automation
 - **`go.mod`** - Go module dependencies
-- **`.vscode/`** - VS Code workspace configuration
+- **`.vscode/`** - VS Code workspace configuration and extension management guide
 - **`gh-deployer.code-workspace`** - Complete workspace settings with extension control
 
 ### Documentation
