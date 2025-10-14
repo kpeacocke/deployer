@@ -4,7 +4,7 @@ This document describes the organization and structure of the gh-deployer projec
 
 ## Directory Structure
 
-```
+```text
 gh-deployer/
 ├── .github/                    # GitHub-specific files
 │   ├── ISSUE_TEMPLATE/         # Issue templates
@@ -25,6 +25,7 @@ gh-deployer/
 ├── docs/                       # Documentation (future)
 ├── examples/                   # Usage examples (future)
 ├── scripts/                    # Utility scripts (future)
+├── gh-deployer.code-workspace  # VS Code workspace file
 ├── config.go                   # Configuration management
 ├── config_test.go              # Configuration tests
 ├── config.example.yaml         # Example configuration
@@ -78,6 +79,7 @@ gh-deployer/
 - **`Makefile`** - Build, test, and development automation
 - **`go.mod`** - Go module dependencies
 - **`.vscode/`** - VS Code workspace configuration
+- **`gh-deployer.code-workspace`** - Complete workspace settings with extension control
 
 ### Documentation
 

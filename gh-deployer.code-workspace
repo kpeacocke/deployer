@@ -12,10 +12,20 @@
         "extensions.autoCheckUpdates": false,
         "extensions.autoUpdate": false,
         
-        // Language-specific disabling
-        "python.defaultInterpreterPath": "", // Disable Python if installed
+        // Language-specific disabling for this workspace
+        "python.defaultInterpreterPath": "",
+        "python.languageServer": "None", 
+        "python.analysis.disabled": true,
         "typescript.suggest.enabled": false,
         "javascript.suggest.enabled": false,
+        "java.enabled": false,
+        "ansible.ansible.path": "",
+        "ansible.executionEnvironment.enabled": false,
+        "terraform.experimentalFeatures.validateOnSave": false,
+        "terraform.languageServer.enable": false,
+        "css.validate": false,
+        "html.validate.scripts": false,
+        "html.validate.styles": false,
         
         // Disable heavy features for performance
         "editor.minimap.enabled": false,
@@ -61,13 +71,49 @@
             "eamodio.gitlens"
         ],
         "unwantedRecommendations": [
+            // Deprecated/unmaintained
             "golang.go-nightly",
-            "ms-python.python",
-            "ms-python.vscode-pylance",
-            "ms-vscode.cpptools",
-            "ms-dotnettools.csharp",
+            "lukehoban.go-outline",
+            
+            // Game development
+            "geequlim.godot-tools",
+            "ms-vscode.godot-tools",
+            "unity.unity-debug",
+            
+            // Infrastructure/DevOps
+            "redhat.ansible",
+            "ms-ansible.ansible", 
+            "hashicorp.terraform",
+            "ms-kubernetes-tools.vscode-kubernetes-tools",
+            "ms-azuretools.vscode-docker",
             "ms-vscode-remote.remote-containers",
-            "ms-azuretools.vscode-docker"
+            
+            // Web development
+            "esbenp.prettier-vscode",
+            "bradlc.vscode-tailwindcss",
+            "ritwickdey.liveserver",
+            "ms-vscode.vscode-css-peek",
+            "formulahendry.auto-rename-tag",
+            "ms-edgedevtools.vscode-edge-devtools",
+            
+            // Other programming languages
+            "ms-python.python",
+            "ms-python.vscode-pylance", 
+            "ms-python.debugpy",
+            "ms-vscode.cpptools",
+            "ms-vscode.cpptools-extension-pack",
+            "ms-dotnettools.csharp",
+            "redhat.java",
+            "vscjava.vscode-java-pack",
+            "ms-vscode.vscode-typescript-next",
+            "rust-lang.rust-analyzer",
+            
+            // Heavy/specialized tools
+            "ms-vscode.vscode-jupyter",
+            "ms-toolsai.jupyter",
+            "ms-vscode.powershell",
+            "ms-vscode.azure-account",
+            "ms-azuretools.vscode-azureresourcegroups"
         ]
     }
 }

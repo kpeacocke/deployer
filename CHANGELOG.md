@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Initial release of gh-deployer
 - Blue/green deployment strategy for Python applications
 - GitHub API integration for release monitoring
@@ -20,18 +21,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extensive test coverage
 
 ### Changed
+
 - N/A
 
 ### Deprecated
+
 - N/A
 
 ### Removed
+
 - N/A
 
 ### Fixed
+
 - N/A
 
 ### Security
+
 - Secure token handling via environment variables
 - Safe file operations with proper permissions
 - Input validation for configuration parameters

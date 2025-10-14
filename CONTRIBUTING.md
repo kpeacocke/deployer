@@ -32,22 +32,26 @@ By participating in this project, you agree to abide by our Code of Conduct (see
 ### Development Setup
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/kpeacocke/deployer.git
    cd deployer
    ```
 
 2. **Install dependencies:**
+
    ```bash
    make deps
    ```
 
 3. **Run tests:**
+
    ```bash
    make test
    ```
 
 4. **Build the application:**
+
    ```bash
    make build
    ```
