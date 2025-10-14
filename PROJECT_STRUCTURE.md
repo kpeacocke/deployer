@@ -116,7 +116,6 @@ gh-deployer/
 
 ### Optional Dependencies
 
-- **Docker** - Containerization (future)
 - **systemd** - Service management (Linux)
 
 ## Architecture Patterns

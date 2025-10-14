@@ -132,9 +132,7 @@ wheels/
 .installed.cfg
 *.egg
 
-# Docker
-.dockerignore
-Dockerfile.dev
+
 
 # Kubernetes
 *.kubeconfig
