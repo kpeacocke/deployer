@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -117,4 +119,38 @@ func (t *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.URL.Scheme = "http"
 	req.URL.Host = t.server.URL[7:] // Remove "http://" prefix
 	return http.DefaultTransport.RoundTrip(req)
+}
+
+func TestGitHubClient_DownloadAsset(t *testing.T) {
+	// Create a test server that serves a known payload
+	payload := []byte("hello-deployer")
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		_, _ = w.Write(payload)
+	}))
+	defer srv.Close()
+
+	client := NewGitHubClient("")
+	client.client = srv.Client()
+
+	asset := &Asset{
+		Name:               "test-asset.tar.gz",
+		BrowserDownloadURL: srv.URL + "/download/test-asset.tar.gz",
+	}
+
+	tmpDir := t.TempDir()
+	dest := filepath.Join(tmpDir, asset.Name)
+
+	if err := client.DownloadAsset(context.Background(), asset, dest); err != nil {
+		t.Fatalf("DownloadAsset failed: %v", err)
+	}
+
+	b, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatalf("reading downloaded file failed: %v", err)
+	}
+
+	if string(b) != string(payload) {
+		t.Fatalf("downloaded content mismatch: expected %q got %q", string(payload), string(b))
+	}
 }

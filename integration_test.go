@@ -94,24 +94,74 @@ func TestDeployerRollback(t *testing.T) {
 
 	logger := log.New(os.Stdout, "[TEST] ", log.LstdFlags)
 
-	// Create deployer
-	deployer, err := NewDeployer(config, logger, true)
-	if err != nil {
-		t.Fatalf("Failed to create deployer: %v", err)
-	}
+	// Test with dry-run mode
+	t.Run("DryRun", func(t *testing.T) {
+		deployer, err := NewDeployer(config, logger, true)
+		if err != nil {
+			t.Fatalf("Failed to create deployer: %v", err)
+		}
 
-	// Verify initial state
-	if deployer.state.ActiveSlot != "blue" {
-		t.Errorf("Expected active slot 'blue', got '%s'", deployer.state.ActiveSlot)
-	}
+		// Verify initial state
+		if deployer.state.ActiveSlot != "blue" {
+			t.Errorf("Expected active slot 'blue', got '%s'", deployer.state.ActiveSlot)
+		}
 
-	// Test rollback
-	if err := deployer.Rollback(); err != nil {
-		t.Fatalf("Rollback failed: %v", err)
-	}
+		// Test rollback in dry-run
+		if err := deployer.Rollback(); err != nil {
+			t.Fatalf("Rollback failed: %v", err)
+		}
 
-	// Verify state changed
-	if deployer.state.ActiveSlot != "green" {
-		t.Errorf("Expected active slot 'green' after rollback, got '%s'", deployer.state.ActiveSlot)
-	}
+		// In dry-run mode, state should NOT change
+		if deployer.state.ActiveSlot != "blue" {
+			t.Errorf("Expected active slot 'blue' in dry-run (no change), got '%s'", deployer.state.ActiveSlot)
+		}
+	})
+
+	// Test without dry-run mode
+	t.Run("RealRollback", func(t *testing.T) {
+		// Create fresh deployer without dry-run
+		deployer, err := NewDeployer(config, logger, false)
+		if err != nil {
+			t.Fatalf("Failed to create deployer: %v", err)
+		}
+
+		// Setup install dir and symlink for real rollback
+		installDir := filepath.Join(tempDir, "deployments")
+		config.InstallDir = installDir
+		config.CurrentSymlink = filepath.Join(tempDir, "current")
+		deployer.config = config
+
+		// Create slot directories
+		if err := os.MkdirAll(filepath.Join(installDir, "blue"), 0755); err != nil {
+			t.Fatalf("Failed to create blue slot: %v", err)
+		}
+		if err := os.MkdirAll(filepath.Join(installDir, "green"), 0755); err != nil {
+			t.Fatalf("Failed to create green slot: %v", err)
+		}
+
+		// Verify initial state
+		if deployer.state.ActiveSlot != "blue" {
+			t.Errorf("Expected active slot 'blue', got '%s'", deployer.state.ActiveSlot)
+		}
+
+		// Test rollback
+		if err := deployer.Rollback(); err != nil {
+			t.Fatalf("Rollback failed: %v", err)
+		}
+
+		// Verify state changed
+		if deployer.state.ActiveSlot != "green" {
+			t.Errorf("Expected active slot 'green' after rollback, got '%s'", deployer.state.ActiveSlot)
+		}
+
+		// Verify symlink was updated
+		linkTarget, err := os.Readlink(config.CurrentSymlink)
+		if err != nil {
+			t.Fatalf("Failed to read symlink: %v", err)
+		}
+		expectedTarget := filepath.Join(installDir, "green")
+		if linkTarget != expectedTarget {
+			t.Errorf("Expected symlink to point to '%s', got '%s'", expectedTarget, linkTarget)
+		}
+	})
 }

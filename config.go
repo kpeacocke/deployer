@@ -20,6 +20,7 @@ type Config struct {
 	GitHubToken        string        `yaml:"github_token,omitempty"`
 	HealthCheckURL     string        `yaml:"health_check_url,omitempty"`
 	HealthCheckTimeout int           `yaml:"health_check_timeout"`
+	VerifyChecksums    bool          `yaml:"verify_checksums"`
 	Logging            LoggingConfig `yaml:"logging"`
 }
 
@@ -55,6 +56,9 @@ func LoadConfig(path string) (*Config, error) {
 	// Override with environment variables if present
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
 		config.GitHubToken = token
+	}
+	if os.Getenv("VERIFY_CHECKSUMS") == "true" {
+		config.VerifyChecksums = true
 	}
 
 	return config, nil

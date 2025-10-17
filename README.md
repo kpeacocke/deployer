@@ -19,13 +19,18 @@ A Go-based GitHub release deployer with blue/green deployment, designed to run o
 
 ## Features
 
-- Polls GitHub for latest release
-- Uses separate Poetry venvs for blue and green slots
-- Atomic symlink switching
-- Optional post-deploy hook
-- Startup-safe with systemd
-- Structured logging and monitoring
-- Health checks and rollback support
+- **Automated Deployment**: Polls GitHub for latest releases and deploys automatically
+- **Blue/Green Deployment**: Uses separate directories for zero-downtime deployments
+- **Archive Support**: Extracts .tar.gz, .tgz, and .zip archives automatically
+- **Checksum Verification**: Optional SHA256 checksum verification for security (configurable)
+- **Custom Install Commands**: Run Poetry or other install steps during deployment
+- **Health Checks**: Validates deployments before switching traffic
+- **Atomic Symlink Switching**: Zero-downtime switchover between versions
+- **Rollback Support**: Easy rollback to previous version with validation
+- **Post-Deploy Hooks**: Optional scripts to run after deployment
+- **Systemd Integration**: Startup-safe with systemd service support
+- **Structured Logging**: Detailed logging of all deployment steps
+- **Dry-Run Mode**: Test deployments without making changes
 
 ## Installation
 
@@ -147,12 +152,39 @@ This workspace configuration:
 
 See `config.yaml` for all configuration options. Key settings:
 
+### Required Settings
+
 - `repo`: GitHub repository to monitor (format: "owner/repo")
 - `asset_suffix`: Filter releases by asset name suffix (e.g., ".tar.gz")
-- `check_interval_seconds`: How often to check for new releases (default: 300)
 - `install_dir`: Root directory for blue/green deployments
 - `current_symlink`: Symlink pointing to active deployment
+- `state_file`: Path to store deployment state
+
+### Optional Settings
+
+- `check_interval_seconds`: How often to check for new releases (default: 300)
+- `github_token`: GitHub API token (or set `GITHUB_TOKEN` env var)
+- `run_command`: Command to run after extraction (e.g., "poetry install --no-dev")
 - `post_deploy_script`: Script to run after successful deployment
+- `verify_checksums`: Enable SHA256 checksum verification (default: false)
+- `health_check_url`: URL to check before activating deployment
+- `health_check_timeout`: Timeout for health checks in seconds (default: 30)
+
+### Example Configuration
+
+```yaml
+repo: "myorg/myapp"
+asset_suffix: ".tar.gz"
+check_interval_seconds: 300
+install_dir: "/opt/myapp/deployments"
+current_symlink: "/opt/myapp/current"
+run_command: "poetry install --no-dev"
+post_deploy_script: "/opt/myapp/scripts/notify-deployment.sh"
+state_file: "/opt/myapp/gh-deployer/state.yaml"
+verify_checksums: true  # Requires checksums.txt in release
+health_check_url: "http://localhost:8000/health"
+health_check_timeout: 30
+```
 
 ## Architecture
 

@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"os/exec"
+	"strings"
 	"path/filepath"
 	"time"
 )
@@ -116,28 +120,201 @@ func (d *Deployer) deploy(ctx context.Context, release *Release) error {
 		return fmt.Errorf("failed to download asset: %w", err)
 	}
 
-	// TODO: Extract archive and run poetry install
-	// TODO: Run health checks
-	// TODO: Switch symlink atomically
-	// TODO: Update state
-	// TODO: Run post-deploy script
+	// Optional checksum verification
+	if d.config.VerifyChecksums {
+		d.logger.Printf("Checksum verification enabled, looking for checksums asset")
+		// Try to find a checksums file in release assets
+		var checksumsAsset *Asset
+		for _, a := range release.Assets {
+			if strings.HasPrefix(a.Name, strings.TrimSuffix(asset.Name, filepath.Ext(asset.Name))) && strings.Contains(a.Name, "checksums") {
+				checksumsAsset = &a
+				break
+			}
+		}
+		if checksumsAsset != nil {
+			checksumPath := filepath.Join(deploymentDir, checksumsAsset.Name)
+			if err := d.github.DownloadAsset(ctx, checksumsAsset, checksumPath); err != nil {
+				return fmt.Errorf("failed to download checksums asset: %w", err)
+			}
+			m, err := ParseChecksums(checksumPath)
+			if err != nil {
+				return fmt.Errorf("failed to parse checksums: %w", err)
+			}
+			// lookup by base name
+			base := filepath.Base(asset.Name)
+			if expected, ok := m[base]; ok {
+				if err := VerifyFileSHA256(assetPath, expected); err != nil {
+					return fmt.Errorf("checksum verification failed: %w", err)
+				}
+				d.logger.Printf("Checksum verification passed for %s", base)
+			} else {
+				return fmt.Errorf("no checksum entry found for %s", base)
+			}
+		} else {
+			d.logger.Printf("VERIFY_CHECKSUMS set but no checksums asset found; aborting")
+			return errors.New("checksums verification requested but no checksums asset found")
+		}
+	}
 
-	d.logger.Printf("Deployment of %s completed successfully", release.TagName)
+	// Extract archive based on extension
+	d.logger.Printf("Extracting asset: %s", asset.Name)
+	var extractErr error
+	if strings.HasSuffix(asset.Name, ".tar.gz") || strings.HasSuffix(asset.Name, ".tgz") {
+		extractErr = ExtractTarGz(assetPath, deploymentDir)
+	} else if strings.HasSuffix(asset.Name, ".zip") {
+		extractErr = ExtractZip(assetPath, deploymentDir)
+	} else {
+		// Not an archive; assume it's a binary. Nothing to extract.
+		d.logger.Printf("Asset is not an archive, skipping extraction")
+		extractErr = nil
+	}
+	if extractErr != nil {
+		return fmt.Errorf("failed to extract archive: %w", extractErr)
+	}
+
+	// Run install command if configured (e.g., poetry install)
+	if d.config.RunCommand != "" {
+		d.logger.Printf("Running install command: %s", d.config.RunCommand)
+		if err := runCommand(deploymentDir, d.config.RunCommand); err != nil {
+			return fmt.Errorf("run command failed: %w", err)
+		}
+		d.logger.Printf("Install command completed successfully")
+	}
+
+	// Health check if configured
+	if d.config.HealthCheckURL != "" {
+		d.logger.Printf("Performing health check on %s", d.config.HealthCheckURL)
+		if err := performHealthCheck(d.config.HealthCheckURL, time.Duration(d.config.HealthCheckTimeout)*time.Second); err != nil {
+			return fmt.Errorf("health check failed: %w", err)
+		}
+		d.logger.Printf("Health check passed")
+	}
+
+	// Atomically switch symlink
+	d.logger.Printf("Switching symlink %s to %s", d.config.CurrentSymlink, deploymentDir)
+	if err := switchSymlink(d.config.CurrentSymlink, deploymentDir); err != nil {
+		return fmt.Errorf("failed to switch symlink: %w", err)
+	}
+
+	// Update state and save
+	if d.state.ActiveSlot == "blue" {
+		d.state.GreenVersion = release.TagName
+	} else {
+		d.state.BlueVersion = release.TagName
+	}
+	d.state.SwitchSlot()
+	if err := d.state.SaveState(d.config.StateFile); err != nil {
+		return fmt.Errorf("failed to save state: %w", err)
+	}
+
+	// Run post-deploy script if configured
+	if d.config.PostDeployScript != "" {
+		d.logger.Printf("Running post-deploy script: %s", d.config.PostDeployScript)
+		if err := runCommand("/", d.config.PostDeployScript); err != nil {
+			d.logger.Printf("Warning: post-deploy script failed: %v", err)
+		} else {
+			d.logger.Printf("Post-deploy script completed successfully")
+		}
+	}
+
+	d.logger.Printf("Deployment of %s to %s slot completed successfully", release.TagName, inactiveSlot)
 	return nil
 }
 
 // Rollback performs a rollback to the previous version
 func (d *Deployer) Rollback() error {
-	d.logger.Printf("Starting rollback from %s slot", d.state.ActiveSlot)
+	currentSlot := d.state.ActiveSlot
+	previousSlot := d.state.GetInactiveSlot()
+	previousVersion := d.getCurrentVersion()
+
+	d.logger.Printf("Starting rollback from %s slot (version %s) to %s slot", 
+		currentSlot, previousVersion, previousSlot)
+
+	if d.dryRun {
+		d.logger.Printf("DRY RUN: Would rollback to %s slot", previousSlot)
+		return nil
+	}
 
 	// Switch back to previous slot
 	d.state.SwitchSlot()
 
-	// TODO: Update symlink
-	// TODO: Save state
-	// TODO: Run post-deploy script
-	// TODO: Validate rollback
+	// Update symlink to point to previous slot
+	previousDir := filepath.Join(d.config.InstallDir, previousSlot)
+	if err := switchSymlink(d.config.CurrentSymlink, previousDir); err != nil {
+		return fmt.Errorf("failed to switch symlink during rollback: %w", err)
+	}
 
-	d.logger.Printf("Rollback completed to %s slot", d.state.ActiveSlot)
+	// Save state
+	if err := d.state.SaveState(d.config.StateFile); err != nil {
+		return fmt.Errorf("failed to save state during rollback: %w", err)
+	}
+
+	// Run post-deploy script if configured
+	if d.config.PostDeployScript != "" {
+		d.logger.Printf("Running post-deploy script after rollback")
+		if err := runCommand("/", d.config.PostDeployScript); err != nil {
+			d.logger.Printf("Warning: post-deploy script failed during rollback: %v", err)
+		}
+	}
+
+	// Validate rollback with health check if configured
+	if d.config.HealthCheckURL != "" {
+		d.logger.Printf("Validating rollback with health check")
+		if err := performHealthCheck(d.config.HealthCheckURL, time.Duration(d.config.HealthCheckTimeout)*time.Second); err != nil {
+			return fmt.Errorf("rollback validation failed: %w", err)
+		}
+	}
+
+	d.logger.Printf("Rollback completed to %s slot", previousSlot)
+	return nil
+}
+
+// runCommand runs a shell command in the specified working directory
+func runCommand(workingDir string, command string) error {
+	// Use 'sh -c' for portability
+	cmd := exec.Command("sh", "-c", command)
+	cmd.Dir = workingDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// performHealthCheck polls the health endpoint until timeout
+func performHealthCheck(url string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	client := &http.Client{Timeout: 5 * time.Second}
+	for time.Now().Before(deadline) {
+		resp, err := client.Get(url)
+		if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 400 {
+			if resp.Body != nil {
+				resp.Body.Close()
+			}
+			return nil
+		}
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
+		time.Sleep(2 * time.Second)
+	}
+	return fmt.Errorf("health check failed for %s within %s", url, timeout)
+}
+
+// switchSymlink atomically updates the symlink to point to newDir
+func switchSymlink(symlinkPath, newDir string) error {
+	// Create parent dir for symlink if needed
+	if err := os.MkdirAll(filepath.Dir(symlinkPath), 0o755); err != nil {
+		return err
+	}
+	tmpLink := symlinkPath + ".tmp"
+	// Remove tmp if exists
+	_ = os.Remove(tmpLink)
+	if err := os.Symlink(newDir, tmpLink); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpLink, symlinkPath); err != nil {
+		// cleanup
+		_ = os.Remove(tmpLink)
+		return err
+	}
 	return nil
 }

@@ -6,3 +6,19 @@ current_symlink: "/opt/myapp/current"
 run_command: "poetry run python main.py"
 post_deploy_script: "deploy.sh"
 state_file: "/opt/myapp/gh-deployer/state.yaml"
+
+# Optional: verify checksums of downloaded assets (default: false)
+# Set to true to require checksums.txt asset in releases
+verify_checksums: false
+
+# Optional: health check configuration
+# health_check_url: "http://localhost:8000/health"
+# health_check_timeout: 30
+
+# Optional: logging configuration
+# logging:
+#   level: "info"
+#   file: "/var/log/gh-deployer/deployer.log"
+#   max_size: "100MB"
+#   max_backups: 5
+#   max_age: 30
