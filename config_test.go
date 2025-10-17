@@ -55,6 +55,8 @@ func TestLoadConfigWithDefaults(t *testing.T) {
 
 	configContent := `repo: "test/repo"
 asset_suffix: ".tar.gz"
+install_dir: "/tmp/test"
+current_symlink: "/tmp/current"
 `
 
 	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
@@ -78,6 +80,11 @@ asset_suffix: ".tar.gz"
 	if config.Logging.Level != "info" {
 		t.Errorf("Expected default log level 'info', got '%s'", config.Logging.Level)
 	}
+
+	// Test state file default
+	if config.StateFile != "/tmp/test/state.yaml" {
+		t.Errorf("Expected default state file '/tmp/test/state.yaml', got '%s'", config.StateFile)
+	}
 }
 
 func TestLoadConfigEnvironmentOverride(t *testing.T) {
@@ -97,6 +104,8 @@ func TestLoadConfigEnvironmentOverride(t *testing.T) {
 
 	configContent := `repo: "test/repo"
 asset_suffix: ".tar.gz"
+install_dir: "/tmp/test"
+current_symlink: "/tmp/current"
 `
 
 	if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {

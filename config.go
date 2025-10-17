@@ -61,5 +61,26 @@ func LoadConfig(path string) (*Config, error) {
 		config.VerifyChecksums = true
 	}
 
+	// Validate required fields and set intelligent defaults
+	if config.StateFile == "" {
+		// Default to state.yaml in the install directory
+		if config.InstallDir != "" {
+			config.StateFile = config.InstallDir + "/state.yaml"
+		} else {
+			config.StateFile = "./state.yaml"
+		}
+	}
+
+	// Validate required configuration
+	if config.Repo == "" {
+		return nil, fmt.Errorf("repo is required in configuration")
+	}
+	if config.InstallDir == "" {
+		return nil, fmt.Errorf("install_dir is required in configuration")
+	}
+	if config.CurrentSymlink == "" {
+		return nil, fmt.Errorf("current_symlink is required in configuration")
+	}
+
 	return config, nil
 }

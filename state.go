@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -43,6 +44,14 @@ func (s *DeploymentState) SaveState(path string) error {
 	data, err := yaml.Marshal(s)
 	if err != nil {
 		return fmt.Errorf("failed to marshal state: %w", err)
+	}
+
+	// Ensure the directory exists
+	dir := filepath.Dir(path)
+	if dir != "." && dir != "/" {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("failed to create state file directory: %w", err)
+		}
 	}
 
 	if err := os.WriteFile(path, data, 0644); err != nil {
