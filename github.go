@@ -135,19 +135,19 @@ func (c *GitHubClient) DownloadAsset(ctx context.Context, asset *Asset, destPath
 
 	// Copy the response body to file
 	if _, err := io.Copy(outFile, resp.Body); err != nil {
-		outFile.Close()
-		os.Remove(tmpPath)
+		_ = outFile.Close()
+		_ = os.Remove(tmpPath)
 		return fmt.Errorf("failed to write download to disk: %w", err)
 	}
 
 	if err := outFile.Close(); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return fmt.Errorf("failed to close downloaded file: %w", err)
 	}
 
 	// Rename temp file to final destination
 	if err := os.Rename(tmpPath, destPath); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return fmt.Errorf("failed to move downloaded file into place: %w", err)
 	}
 

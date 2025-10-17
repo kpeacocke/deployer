@@ -39,11 +39,15 @@ func TestExtractTarGz(t *testing.T) {
 		t.Fatalf("failed to write tar content: %v", err)
 	}
 
-	tarWriter.Close()
-	gzWriter.Close()
-	f.Close()
-
-	// Extract the archive
+	if err = tarWriter.Close(); err != nil {
+		t.Fatalf("failed to close tar writer: %v", err)
+	}
+	if err = gzWriter.Close(); err != nil {
+		t.Fatalf("failed to close gzip writer: %v", err)
+	}
+	if err = f.Close(); err != nil {
+		t.Fatalf("failed to close tar file: %v", err)
+	} // Extract the archive
 	extractDir := filepath.Join(tmpDir, "extracted")
 	if err = ExtractTarGz(tarPath, extractDir); err != nil {
 		t.Fatalf("failed to extract tar.gz: %v", err)
@@ -84,10 +88,12 @@ func TestExtractZip(t *testing.T) {
 		t.Fatalf("failed to write zip content: %v", err)
 	}
 
-	zipWriter.Close()
-	f.Close()
-
-	// Extract the archive
+	if err = zipWriter.Close(); err != nil {
+		t.Fatalf("failed to close zip writer: %v", err)
+	}
+	if err = f.Close(); err != nil {
+		t.Fatalf("failed to close zip file: %v", err)
+	} // Extract the archive
 	extractDir := filepath.Join(tmpDir, "extracted")
 	if err = ExtractZip(zipPath, extractDir); err != nil {
 		t.Fatalf("failed to extract zip: %v", err)

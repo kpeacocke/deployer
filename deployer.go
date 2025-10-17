@@ -287,12 +287,12 @@ func performHealthCheck(url string, timeout time.Duration) error {
 		resp, err := client.Get(url)
 		if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 400 {
 			if resp.Body != nil {
-				resp.Body.Close()
+				_ = resp.Body.Close()
 			}
 			return nil
 		}
 		if resp != nil && resp.Body != nil {
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 		time.Sleep(2 * time.Second)
 	}
