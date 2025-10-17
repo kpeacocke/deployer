@@ -10,7 +10,6 @@ state_file: "/opt/myapp/gh-deployer/state.yaml"
 # Optional: verify checksums of downloaded assets (default: false)
 # Set to true to require checksums.txt asset in releases
 verify_checksums: false
-
 # Optional: health check configuration
 # health_check_url: "http://localhost:8000/health"
 # health_check_timeout: 30

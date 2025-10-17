@@ -132,10 +132,10 @@ func TestDeployerRollback(t *testing.T) {
 		deployer.config = config
 
 		// Create slot directories
-		if err := os.MkdirAll(filepath.Join(installDir, "blue"), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(installDir, "blue"), 0o755); err != nil {
 			t.Fatalf("Failed to create blue slot: %v", err)
 		}
-		if err := os.MkdirAll(filepath.Join(installDir, "green"), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(installDir, "green"), 0o755); err != nil {
 			t.Fatalf("Failed to create green slot: %v", err)
 		}
 

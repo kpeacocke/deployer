@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -110,7 +110,7 @@ func (d *Deployer) deploy(ctx context.Context, release *Release) error {
 
 	// Create deployment directory
 	deploymentDir := filepath.Join(d.config.InstallDir, inactiveSlot)
-	if err := os.MkdirAll(deploymentDir, 0755); err != nil {
+	if err := os.MkdirAll(deploymentDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create deployment directory: %w", err)
 	}
 
@@ -227,7 +227,7 @@ func (d *Deployer) Rollback() error {
 	previousSlot := d.state.GetInactiveSlot()
 	previousVersion := d.getCurrentVersion()
 
-	d.logger.Printf("Starting rollback from %s slot (version %s) to %s slot", 
+	d.logger.Printf("Starting rollback from %s slot (version %s) to %s slot",
 		currentSlot, previousVersion, previousSlot)
 
 	if d.dryRun {
