@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -118,9 +120,36 @@ func (c *GitHubClient) DownloadAsset(ctx context.Context, asset *Asset, destPath
 		return fmt.Errorf("download failed with status %d", resp.StatusCode)
 	}
 
-	// TODO: Implement actual file download and extraction
-	// This would involve creating the destination directory,
-	// downloading the file, and extracting if it's a tar.gz
+	// Ensure destination directory exists
+	destDir := filepath.Dir(destPath)
+	if err := os.MkdirAll(destDir, 0o755); err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
+	}
 
-	return fmt.Errorf("download implementation pending")
+	// Download to a temporary file then atomically rename
+	tmpPath := destPath + ".tmp"
+	outFile, err := os.Create(tmpPath)
+	if err != nil {
+		return fmt.Errorf("failed to create temp file for download: %w", err)
+	}
+
+	// Copy the response body to file
+	if _, err := io.Copy(outFile, resp.Body); err != nil {
+		outFile.Close()
+		os.Remove(tmpPath)
+		return fmt.Errorf("failed to write download to disk: %w", err)
+	}
+
+	if err := outFile.Close(); err != nil {
+		os.Remove(tmpPath)
+		return fmt.Errorf("failed to close downloaded file: %w", err)
+	}
+
+	// Rename temp file to final destination
+	if err := os.Rename(tmpPath, destPath); err != nil {
+		os.Remove(tmpPath)
+		return fmt.Errorf("failed to move downloaded file into place: %w", err)
+	}
+
+	return nil
 }
