@@ -32,14 +32,36 @@ else
     log "Application may fail if it requires environment variables"
 fi
 
-# Verify poetry environment exists
-if ! poetry env info --path &>/dev/null; then
-    log "ERROR: Poetry environment not found"
-    exit 1
+# Create .venv symlink if it doesn't exist (for systemd service to find venv)
+if [ ! -e .venv ]; then
+    log "Creating .venv symlink..."
+    if [ -x "$HOME/.local/bin/poetry" ]; then
+        VENV_PATH=$("$HOME/.local/bin/poetry" env info --path 2>/dev/null)
+        if [ -n "$VENV_PATH" ] && [ -d "$VENV_PATH" ]; then
+            ln -sf "$VENV_PATH" .venv
+            log "✓ .venv symlink created: .venv -> $VENV_PATH"
+        else
+            log "WARNING: Could not determine Poetry venv path"
+        fi
+    else
+        log "WARNING: Poetry not found at $HOME/.local/bin/poetry"
+    fi
 fi
 
-POETRY_ENV=$(poetry env info --path)
-log "Poetry environment: $POETRY_ENV"
+# Verify poetry environment exists
+if ! command -v poetry >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/poetry" ]; then
+    log "WARNING: Poetry not found in PATH"
+    # Continue anyway, the .venv symlink may be sufficient
+else
+    POETRY_CMD="${HOME}/.local/bin/poetry"
+    if ! "$POETRY_CMD" env info --path &>/dev/null; then
+        log "WARNING: Poetry environment not found"
+        # Don't exit - the .venv symlink may still work
+    else
+        POETRY_ENV=$("$POETRY_CMD" env info --path)
+        log "Poetry environment: $POETRY_ENV"
+    fi
+fi
 
 # Check if running as systemd service
 if systemctl is-active --quiet "$SERVICE_NAME"; then
