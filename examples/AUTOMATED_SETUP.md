@@ -83,11 +83,14 @@ asset_suffix: ".tar.gz"
 check_interval_seconds: 300  # Check every 5 minutes
 install_dir: "/opt/displayboard/deployments"
 current_symlink: "/opt/displayboard/current"
-run_command: "poetry install --no-dev"
+run_command: "/home/$USER/.local/bin/poetry install --without dev"
 post_deploy_script: "/opt/displayboard/scripts/restart-displayboard.sh"
 state_file: "/opt/displayboard/gh-deployer/state.yaml"
 github_token: ""  # Will be read from env var GITHUB_TOKEN
 EOF
+
+# Replace $USER with actual username
+sed -i "s/\$USER/$USER/" /opt/displayboard/gh-deployer/config.yaml
 ```
 
 ### 6. Install the Scripts
@@ -110,10 +113,51 @@ sudo cp gh-deployer.service /etc/systemd/system/
 sudo cp displayboard.service /etc/systemd/system/
 ```
 
-### 7. Configure GitHub Token in Service
+### 7. Set Up Hardware Permissions (For NeoPixel/GPIO Access)
+
+If your displayboard uses NeoPixels or GPIO, set up permissions so it runs without sudo:
 
 ```bash
-# Edit the gh-deployer service to read the token
+# Download permission setup files from your displayboard repo
+cd /tmp
+curl -L "https://github.com/kpeacocke/displayboard/archive/main.tar.gz" | tar xz
+cd displayboard-main/permissions
+
+# Run the setup script
+sudo bash setup-permissions.sh
+
+# Log out and back in for group changes to take effect
+exit
+# Then SSH back in
+
+# Verify you're in the gpio and video groups
+groups
+# Should show: gpio video
+```
+
+This grants your user access to GPIO, /dev/mem, and DMA without requiring sudo.
+
+### 8. Install Poetry (If Not Already Installed)
+
+```bash
+# Install Poetry
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Add to PATH
+export PATH="$HOME/.local/bin:$PATH"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+
+# Configure Poetry to create venvs in project directory
+poetry config virtualenvs.in-project true
+
+# Verify
+poetry --version
+```
+
+### 9. Configure GitHub Token
+
+```bash
+# Edit the gh-deployer service to read the token (optional)
 sudo nano /etc/systemd/system/gh-deployer.service
 ```
 
@@ -131,7 +175,17 @@ TOKEN=$(cat /opt/displayboard/config/github-token)
 sed -i "s/github_token: \"\"/github_token: \"$TOKEN\"/" /opt/displayboard/gh-deployer/config.yaml
 ```
 
-### 8. Enable and Start Services
+### 10. Fix Username in Services
+
+```bash
+# Replace 'pi' with your actual username in both service files
+sudo sed -i "s/User=pi/User=$USER/" /etc/systemd/system/gh-deployer.service
+sudo sed -i "s/Group=pi/Group=$USER/" /etc/systemd/system/gh-deployer.service
+sudo sed -i "s/User=pi/User=$USER/" /etc/systemd/system/displayboard.service
+sudo sed -i "s/Group=pi/Group=$USER/" /etc/systemd/system/displayboard.service
+```
+
+### 11. Enable and Start Services
 
 ```bash
 # Reload systemd
