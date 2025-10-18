@@ -2,6 +2,8 @@
 Description=GitHub Release Deployer for Displayboard
 After=network-online.target
 Wants=network-online.target
+# Wait for network to actually be available before starting
+Requires=network-online.target
 
 [Service]
 Type=simple
@@ -12,17 +14,16 @@ WorkingDirectory=/opt/displayboard/gh-deployer
 # Run the deployer with the config file
 ExecStart=/usr/local/bin/gh-deployer --config /opt/displayboard/gh-deployer/config.yaml
 
-# Restart policy - keep trying if it fails
+# Restart policy - keep trying if it fails or network drops
 Restart=always
-RestartSec=30
+RestartSec=60
+# Start immediately on system boot once network is available
+StartLimitIntervalSec=0
 
 # Environment variables
 Environment="GITHUB_TOKEN_FILE=/opt/displayboard/config/github-token"
 
-# Read GitHub token from file if it exists
-ExecStartPre=/bin/bash -c 'if [ -f /opt/displayboard/config/github-token ]; then export GITHUB_TOKEN=$(cat /opt/displayboard/config/github-token); fi'
-
-# Logging
+# Logging (will show network retry attempts)
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=gh-deployer

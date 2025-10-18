@@ -1,7 +1,7 @@
 [Unit]
 Description=Displayboard Python Application
-After=network-online.target
-Wants=network-online.target
+# Don't require network - app can run offline after bootstrap
+After=local-fs.target
 
 [Service]
 Type=simple
