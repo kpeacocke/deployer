@@ -48,6 +48,18 @@ if [ ! -e .venv ]; then
     fi
 fi
 
+# Run permission setup script if it exists in the deployment
+if [ -f "permissions/setup-permissions.sh" ]; then
+    log "Found permissions setup script, running..."
+    if sudo bash permissions/setup-permissions.sh; then
+        log "✓ Permissions setup completed"
+        log "NOTE: You may need to log out and back in for group changes to take effect"
+    else
+        log "WARNING: Permissions setup script failed (exit code $?)"
+        log "Application may require manual permission configuration"
+    fi
+fi
+
 # Verify poetry environment exists
 if ! command -v poetry >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/poetry" ]; then
     log "WARNING: Poetry not found in PATH"
