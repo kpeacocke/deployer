@@ -9,10 +9,16 @@ User=pi
 Group=pi
 WorkingDirectory=/opt/displayboard/current
 
-# Get the Python interpreter from Poetry's virtual environment
-# This is dynamically evaluated when the service starts
-ExecStartPre=/bin/bash -c 'poetry env info --path > /tmp/displayboard-venv-path'
-ExecStart=/bin/bash -c 'exec $(cat /tmp/displayboard-venv-path)/bin/python -m displayboard.main -d'
+# Run using the Poetry venv
+# Poetry creates venv in project directory as .venv (if configured) or in cache dir
+# This uses the .venv if present, otherwise tries to find it via poetry
+ExecStart=/bin/bash -c '\
+  if [ -d .venv ]; then \
+    exec .venv/bin/python -m displayboard.main -d; \
+  else \
+    VENV_PATH=$(poetry env info --path 2>/dev/null || echo ".venv"); \
+    exec $VENV_PATH/bin/python -m displayboard.main -d; \
+  fi'
 
 # Restart policy
 Restart=always
