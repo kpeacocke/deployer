@@ -1,10 +1,18 @@
+# Example configuration for deploying a Python/Poetry project
 repo: "your-user/your-repo"
 asset_suffix: ".tar.gz"
 check_interval_seconds: 300
 install_dir: "/opt/myapp/deployments"
 current_symlink: "/opt/myapp/current"
-run_command: "poetry run python main.py"
-post_deploy_script: "deploy.sh"
+
+# Run poetry install in the deployment directory after extraction
+# This ensures all dependencies are installed before starting the app
+run_command: "poetry install --no-dev"
+
+# Post-deploy script to restart the application
+# This script runs after the symlink switch and state update
+post_deploy_script: "/opt/myapp/scripts/restart-app.sh"
+
 state_file: "/opt/myapp/gh-deployer/state.yaml"
 
 # Optional: verify checksums of downloaded assets (default: false)
@@ -21,3 +29,12 @@ verify_checksums: false
 #   max_size: "100MB"
 #   max_backups: 5
 #   max_age: 30
+
+# Example configuration for displayboard project:
+# repo: "kpeacocke/displayboard"
+# asset_suffix: ".tar.gz"
+# install_dir: "/opt/displayboard/deployments"
+# current_symlink: "/opt/displayboard/current"
+# run_command: "poetry install --no-dev"
+# post_deploy_script: "/opt/displayboard/scripts/restart-displayboard.sh"
+# state_file: "/opt/displayboard/gh-deployer/state.yaml"

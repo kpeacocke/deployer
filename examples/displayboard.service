@@ -1,0 +1,34 @@
+[Unit]
+Description=Displayboard Python Application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/opt/displayboard/current
+
+# Get the Python interpreter from Poetry's virtual environment
+# This is dynamically evaluated when the service starts
+ExecStartPre=/bin/bash -c 'poetry env info --path > /tmp/displayboard-venv-path'
+ExecStart=/bin/bash -c 'exec $(cat /tmp/displayboard-venv-path)/bin/python -m displayboard.main -d'
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=displayboard
+
+# Security and resource limits
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/displayboard /var/log/displayboard
+
+[Install]
+WantedBy=multi-user.target
