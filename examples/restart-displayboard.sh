@@ -45,7 +45,7 @@ log "Poetry environment: $POETRY_ENV"
 if systemctl is-active --quiet "$SERVICE_NAME"; then
     log "Restarting systemd service: $SERVICE_NAME"
     sudo systemctl restart "$SERVICE_NAME"
-    
+
     # Wait a moment and verify service started
     sleep 2
     if systemctl is-active --quiet "$SERVICE_NAME"; then
@@ -58,18 +58,18 @@ if systemctl is-active --quiet "$SERVICE_NAME"; then
 else
     # If not running as systemd service, start manually
     log "Starting displayboard manually (not running as systemd service)"
-    
+
     # Kill any existing displayboard processes
     if pgrep -f "displayboard.main" > /dev/null; then
         log "Stopping existing displayboard processes..."
         sudo pkill -f "displayboard.main" || true
         sleep 2
     fi
-    
+
     # Start the application in the background
     log "Starting displayboard application..."
     nohup sudo "$POETRY_ENV/bin/python" -m displayboard.main -d >> "$LOG_FILE" 2>&1 &
-    
+
     # Store the PID
     echo $! > /var/run/displayboard.pid
     log "✓ Displayboard started with PID $(cat /var/run/displayboard.pid)"
