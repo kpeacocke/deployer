@@ -104,9 +104,10 @@ else
     log "Starting displayboard application..."
     nohup sudo "$POETRY_ENV/bin/python" -m displayboard.main -d >> "$LOG_FILE" 2>&1 &
 
-    # Store the PID
-    echo $! > /var/run/displayboard.pid
-    log "✓ Displayboard started with PID $(cat /var/run/displayboard.pid)"
+    # Store the PID in a writable location
+    PID_FILE="/tmp/displayboard.pid"
+    echo $! > "$PID_FILE"
+    log "✓ Displayboard started with PID $(cat $PID_FILE)"
 fi
 
 log "Post-deployment tasks completed successfully!"
