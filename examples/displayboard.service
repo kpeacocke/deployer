@@ -10,14 +10,16 @@ Group=pi
 WorkingDirectory=/opt/displayboard/current
 
 # Run using the Poetry venv
-# Poetry creates venv in project directory as .venv (if configured) or in cache dir
-# This uses the .venv if present, otherwise tries to find it via poetry
+# First try .venv in project, then use full path to poetry to find venv
 ExecStart=/bin/bash -c '\
   if [ -d .venv ]; then \
     exec .venv/bin/python -m displayboard.main -d; \
-  else \
-    VENV_PATH=$(poetry env info --path 2>/dev/null || echo ".venv"); \
+  elif [ -x $HOME/.local/bin/poetry ]; then \
+    VENV_PATH=$($HOME/.local/bin/poetry env info --path 2>/dev/null); \
     exec $VENV_PATH/bin/python -m displayboard.main -d; \
+  else \
+    echo "Error: Cannot find Poetry venv" >&2; \
+    exit 1; \
   fi'
 
 # Restart policy
