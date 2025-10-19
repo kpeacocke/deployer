@@ -38,6 +38,10 @@ trap 'rm -rf $TMP_DIR' EXIT
 # Download and extract
 curl -L "$DOWNLOAD_URL" | tar -xzf - -C "$TMP_DIR"
 
+# List what was extracted for debugging
+echo "Extracted files:"
+ls -la "$TMP_DIR"
+
 # Stop service if running
 if systemctl is-active --quiet gh-deployer; then
     echo "Stopping gh-deployer service..."
