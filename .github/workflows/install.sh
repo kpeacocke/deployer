@@ -38,20 +38,17 @@ trap 'rm -rf $TMP_DIR' EXIT
 # Download and extract
 curl -L "$DOWNLOAD_URL" | tar -xzf - -C "$TMP_DIR"
 
-# List what was extracted for debugging
-echo "Extracted files:"
-ls -la "$TMP_DIR"
-
 # Stop service if running
 if systemctl is-active --quiet gh-deployer; then
     echo "Stopping gh-deployer service..."
     sudo systemctl stop gh-deployer
 fi
 
-# Install binary
+# Install binary (filename includes platform)
+BINARY_NAME="gh-deployer-${OS}-${ARCH}"
 echo "Installing to ${INSTALL_DIR}..."
 sudo mkdir -p "$INSTALL_DIR"
-sudo cp "$TMP_DIR/gh-deployer" "$INSTALL_DIR/"
+sudo cp "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/gh-deployer"
 sudo chmod +x "$INSTALL_DIR/gh-deployer"
 
 # Copy post-deploy script if it exists
