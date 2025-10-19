@@ -6,18 +6,30 @@ INSTALL_DIR="/opt/displayboard/gh-deployer"
 
 echo "Installing gh-deployer from latest release..."
 
+# Detect architecture
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+case "$ARCH" in
+    x86_64) ARCH="amd64" ;;
+    aarch64) ARCH="arm64" ;;
+    armv7l) ARCH="armv7" ;;
+esac
+
+ASSET_NAME="gh-deployer-${OS}-${ARCH}.tar.gz"
+echo "Detecting architecture: ${OS}-${ARCH}"
+
 # Get latest release info
 LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest")
 VERSION=$(echo "$LATEST_RELEASE" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | grep "browser_download_url.*tar.gz" | cut -d '"' -f 4)
+DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | grep "browser_download_url.*${ASSET_NAME}" | cut -d '"' -f 4)
 
 if [ -z "$DOWNLOAD_URL" ]; then
-    echo "Error: Could not find release asset"
+    echo "Error: Could not find release asset for ${ASSET_NAME}"
     exit 1
 fi
 
 echo "Downloading version ${VERSION}..."
-echo "URL: ${DOWNLOAD_URL}"
+echo "Asset: ${ASSET_NAME}"
 
 # Create temp directory
 TMP_DIR=$(mktemp -d)
