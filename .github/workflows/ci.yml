@@ -89,7 +89,7 @@ jobs:
           ./gh-deployer --help
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: gh-deployer-${{ runner.os }}-${{ github.sha }}
           path: gh-deployer
