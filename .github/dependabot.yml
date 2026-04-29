@@ -33,6 +33,5 @@ updates:
       prefix: "ci"
       include: "scope"
     assignees:
-      - "dependencies"
-      - "github-actions"
+      - "kpeacocke"
     open-pull-requests-limit: 5
